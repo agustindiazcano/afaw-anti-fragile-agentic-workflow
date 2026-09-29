@@ -126,7 +126,7 @@ Cuando se pida el estado del proyecto, responder **siempre** con una tabla de ta
 7. Los veredictos de los LLM varían entre corridas: no repetir la votación para "corregir", y cubrir ese hueco con chequeos deterministas.
 
 ## 11. Tests de código
-1. **Los tests siempre se lanzan en la nube** (GitHub Actions o el CI que use el proyecto), nunca en la máquina local: correrlos localmente es perder tiempo. Lo mismo vale para linters, type-check, mutation testing y builds: **todo se lanza en el CI**.
+1. **Feedback rápido local, suites pesadas en CI:** Correr localmente lo que toma segundos (un linter rápido, type-check o tests unitarios específicos del diff) para obtener feedback inmediato y economizar minutos de CI (relevante en repos privados con cuota). Delegar al CI lo pesado: suite completa, tests de integración/e2e, mutation testing con AST, builds y pruebas de carga.
 2. **Se paralelizan siempre que sea posible**; no se lanzan en cola.
 3. Cambios en el back lanzan solo los tests del back; cambios en el front, solo los del front.
 4. **Las modificaciones de documentos no lanzan tests:** solo lo que tenga código.
@@ -191,7 +191,7 @@ Cuando se pida el estado del proyecto, responder **siempre** con una tabla de ta
 
 ## 18. Linters, ramas, commits y PRs
 ### Linters
-1. Los linters y el type-check (`ruff`, `mypy`, y los del front) corren en el CI, no en local.
+1. Los linters y el type-check (`ruff`, `mypy`, y los del front) pueden correrse localmente sobre el diff para feedback inmediato en segundos. En el CI se revalidan obligatoriamente.
 2. Se lanzan solo sobre lo modificado (el diff), y solo el linter del lado que cambió (back o front).
 3. No corren en cambios que sean solo documentos.
 
