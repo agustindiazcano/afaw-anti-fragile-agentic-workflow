@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "role", "status", "owner", "priority", "difficulty", "blocked_by", "locked_files"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^task_[0-9]{3,}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "role": { "type": "string" },
+    "status": { "enum": ["pending", "in_progress", "blocked", "completed"] },
+    "owner": { "type": ["string", "null"] },
+    "branch": { "type": ["string", "null"] },
+    "priority": { "type": "integer", "minimum": 1, "maximum": 5, "description": "1 = most urgent" },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 5, "description": "1 = trivial, 5 = very hard" },
+    "blocked_by": { "type": "array", "items": { "type": "string" } },
+    "locked_files": { "type": "array", "items": { "type": "string" } },
+    "pr": { "type": ["string", "null"] },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "code_prefixes": ["src/", "tests/", "scripts/"],
+  "ignored_names": [".gitkeep"],
+  "test_prefixes": ["tests/"],
+  "mutation_critical_paths": [],
+  "mutation_min_score": 80
+}

@@ -1,0 +1,26 @@
+{
+  "project": "my-new-project",
+  "generated": true,
+  "generated_by": "scripts/merge_state.py (CI)",
+  "updated_at": "2026-09-29T15:45:00-03:00",
+  "summary": "0 of 3 tasks completed; 1 in progress; 1 pending; 1 blocked.",
+  "architecture_decisions": [
+    {
+      "id": "dec_001",
+      "date": "2026-09-29",
+      "decision": "Dynamic state lives in JSON; rules live in Markdown (CLAUDE.md / AGENTS.md).",
+      "source_task": null
+    },
+    {
+      "id": "dec_task_001_1",
+      "date": "2026-09-29",
+      "decision": "Health endpoint returns 200 with a static JSON body; no database check.",
+      "source_task": "task_001"
+    }
+  ],
+  "dependencies": {
+    "backend": [],
+    "frontend": []
+  },
+  "last_merged_tasks": []
+}

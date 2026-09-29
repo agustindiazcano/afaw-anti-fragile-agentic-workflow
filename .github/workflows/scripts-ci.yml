@@ -1,0 +1,54 @@
+name: Scripts CI
+
+# Lint, type-check and tests for the state scripts. Three parallel jobs, and only when
+# the scripts, their tests, the schemas or the tool config change.
+# Dev dependencies come from the "dev" group in pyproject.toml (needs pip >= 25.1).
+on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "tests/tooling/**"
+      - "state/schemas/**"
+      - "state/config.json"
+      - "pyproject.toml"
+      - ".github/workflows/scripts-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip && pip install --group dev
+      - run: ruff check scripts tests/tooling
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip && pip install --group dev
+      - run: mypy --strict scripts
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip && pip install --group dev
+      - run: pytest tests/tooling -q

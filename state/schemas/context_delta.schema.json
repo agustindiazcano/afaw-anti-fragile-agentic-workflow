@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Task context delta",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "role", "agent", "branch", "written_at", "decisions", "files_touched"],
+  "properties": {
+    "task_id": { "type": "string", "pattern": "^task_[0-9]{3,}$" },
+    "role": { "type": "string" },
+    "agent": { "type": "string" },
+    "branch": { "type": "string" },
+    "written_at": { "type": "string" },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["decision"],
+        "properties": {
+          "decision": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "dependencies_added": { "type": "array", "items": { "type": "string" } },
+    "files_touched": { "type": "array", "items": { "type": "string" } },
+    "blocked_by_lock": { "type": "array", "items": { "type": "string" } },
+    "remaining_work": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string" }
+  }
+}
