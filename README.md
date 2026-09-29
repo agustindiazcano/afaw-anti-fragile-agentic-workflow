@@ -2,6 +2,26 @@
 
 An anti-fragile, multi-agent workflow framework designed for resilient, adaptive AI-driven software engineering and automation.
 
+---
+
+## Index
+
+1. **[System Overview](#system-overview)**: High-level multi-agent topology, branch isolation, cloud CI, and human sign-off.
+2. **[Directory Structure](#directory-structure)**: Repository layout, modular agent skills, state definitions, and tooling.
+3. **[Core Principles](#core-principles)**: Deterministic verification, fast local feedback, atomic context deltas, and defense-in-depth.
+4. **[Workflow & Architecture Diagrams](#workflow--architecture-diagrams)**:
+   - 4.1 **[Task Lifecycle](#1-task-lifecycle)**: 12-step lifecycle from session start (`ROL:` consultation) to merge and branch deletion.
+   - 4.2 **[State & Context Management](#2-state--context-management)**: Source of truth in atomic task files (`state/tasks/`), agent context deltas, and automated CI consolidation.
+   - 4.3 **[CI/CD Pipeline](#3-cicd-pipeline)**: Path-filtered parallel jobs and docs-only fast-paths.
+   - 4.4 **[Mutation Testing on Diffs](#4-mutation-testing-on-diffs)**: AST mutant injection, survivor elimination, and critical threshold enforcement.
+   - 4.5 **[Control Layers](#5-control-layers)**: Defense-in-depth from guidelines to branch protection.
+
+---
+
+## System Overview
+
+High-level multi-agent topology, branch isolation, cloud CI, and human sign-off:
+
 ![AFAW Overview](docs/img/01-overview.svg)
 
 ---
