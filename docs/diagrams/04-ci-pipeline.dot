@@ -1,0 +1,41 @@
+digraph ci_pipeline {
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.3, nodesep=0.35, ranksep=0.6, splines=true, rankdir=TB];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=13, color="#15803d", fillcolor="#dcfce7", fontcolor="#1f2933", penwidth=1.2, margin="0.22,0.12"];
+  edge  [fontname="Helvetica", fontsize=11, color="#52606d", fontcolor="#3e4c59", arrowsize=0.8, penwidth=1.1];
+
+  node [fillcolor="#e1effe", color="#1c64f2"];
+  push [label="Push of a task branch\nor a pull request"];
+
+  node [fillcolor="#fef3c7", color="#b45309", style="rounded,filled,dashed"];
+  heavy [label="Separate workflows\nLoad and chaos tests: manual or scheduled\nNot on every PR, never on the local machine"];
+
+  node [fillcolor="#f5f7fa", color="#52606d", style="rounded,filled"];
+  filt [label="Path filters\neach job runs only when its own files change"];
+
+  node [fillcolor="#dcfce7", color="#15803d"];
+  be   [label="Back end changed\nback-end tests,\nruff and mypy\non the diff"];
+  fe   [label="Front end changed\nfront-end tests and\nlinters on the diff"];
+  mut  [label="New or modified files\nmutation testing,\nparallelized\n(see the mutation diagram)"];
+
+  node [fillcolor="#f5f7fa", color="#52606d"];
+  docs [label="Documents only\nno job runs"];
+
+  node [fillcolor="#dcfce7", color="#15803d"];
+  gate [label="All checks must pass\nbefore the human reviews the PR"];
+
+  node [fillcolor="#f5f7fa", color="#52606d"];
+  link [label="CI run link pasted in the PR"];
+
+  {rank=same; push; heavy;}
+  {rank=same; be; fe; mut; docs;}
+
+  push -> filt;
+  filt -> be;
+  filt -> fe;
+  filt -> mut;
+  filt -> docs [style=dashed];
+  be -> gate;
+  fe -> gate;
+  mut -> gate;
+  gate -> link;
+}

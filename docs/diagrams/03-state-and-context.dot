@@ -1,0 +1,36 @@
+digraph state_and_context {
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.3, nodesep=0.5, ranksep=0.45, splines=true, rankdir=TB];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=13, color="#52606d", fillcolor="#f5f7fa", fontcolor="#1f2933", penwidth=1.2, margin="0.25,0.13"];
+  edge  [fontname="Helvetica", fontsize=11, color="#52606d", fontcolor="#3e4c59", arrowsize=0.8, penwidth=1.1];
+
+  node [fillcolor="#e1effe", color="#1c64f2"];
+  agent [label="Agent (any number in parallel)"];
+
+  node [fillcolor="#ede9fe", color="#6d28d9"];
+  own   [label="The agent writes only its own files\ncontext/tasks/task_NNN_context.json (delta)\nstate/tasks/task_NNN.json (task file)"];
+
+  node [fillcolor="#f5f7fa", color="#52606d"];
+  pr    [label="Task PR\nthe delta and task file travel with the code"];
+
+  node [fillcolor="#dcfce7", color="#15803d"];
+  check [label="CI: scripts/check_task_delta.py\nCode changed without a valid delta listing\nthe files in files_touched: PR rejected"];
+  merge [label="CI after the merge: scripts/merge_state.py\nregenerates the shared state files"];
+
+  node [fillcolor="#f5f7fa", color="#52606d"];
+  spr   [label="State PR opened by CI"];
+
+  node [fillcolor="#fef3c7", color="#b45309"];
+  human [label="Human approves the state PR"];
+
+  node [fillcolor="#ede9fe", color="#6d28d9"];
+  gen   [label="Generated files on main, never edited by hand\nstate/pending.json\ncontext/global/lastcontext.json\ncontext/roles/*/lastcontext.json"];
+
+  node [fillcolor="#f5f7fa", color="#52606d"];
+  status [label="Status report\nreads only state/pending.json from origin/main"];
+
+  agent -> own -> pr -> check;
+  check -> merge [label=" merged"];
+  merge -> spr -> human;
+  human -> gen [label=" merged"];
+  gen -> status [style=dashed];
+}

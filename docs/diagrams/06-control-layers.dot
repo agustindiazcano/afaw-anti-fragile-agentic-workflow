@@ -1,0 +1,28 @@
+digraph control_layers {
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.3, nodesep=0.5, ranksep=0.5, splines=true, rankdir=TB];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=13, color="#52606d", fillcolor="#f5f7fa", fontcolor="#1f2933", penwidth=1.2, margin="0.3,0.14"];
+  edge  [fontname="Helvetica", fontsize=11, color="#52606d", fontcolor="#3e4c59", arrowsize=0.8, penwidth=1.1];
+
+  node [fillcolor="#e1effe", color="#1c64f2"];
+  act [label="An agent tries to do something\ncommit, push, merge, change state"];
+
+  node [fillcolor="#fef3c7", color="#b45309"];
+  l1  [label="Layer 1: AGENTS.md and CLAUDE.md\nAdvice. The agent can ignore or misread it.\nStep 0, never push to main, ask before the PR"];
+
+  node [fillcolor="#ede9fe", color="#6d28d9"];
+  l2  [label="Layer 2: hooks\nIntercept commands before they run\ne.g. the PENDING.md file can never be deleted or emptied"];
+
+  node [fillcolor="#dcfce7", color="#15803d"];
+  l3  [label="Layer 3: CI checks\nTests, lint, types, mutation, task delta\nA failing check blocks the PR"];
+
+  node [fillcolor="#fee2e2", color="#b91c1c"];
+  l4  [label="Layer 4: GitHub branch protection\nThe server rejects a direct push to main"];
+
+  node [fillcolor="#fef3c7", color="#b45309"];
+  hum [label="Human approves the PR manually"];
+
+  node [fillcolor="#f5f7fa", color="#52606d"];
+  main [label="main"];
+
+  act -> l1 -> l2 -> l3 -> l4 -> hum -> main;
+}

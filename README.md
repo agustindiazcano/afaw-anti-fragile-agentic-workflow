@@ -2,6 +2,10 @@
 
 An anti-fragile, multi-agent workflow framework designed for resilient, adaptive AI-driven software engineering and automation.
 
+![AFAW Overview](docs/img/01-overview.svg)
+
+---
+
 ## Directory Structure
 
 ```text
@@ -25,6 +29,9 @@ afaw-anti-fragile-agentic-workflow/
 │       └── task_001_context.json # Context delta for specific task
 ├── dashboard/                    # Monitoring, metrics, and dashboard assets
 ├── docs/                         # Architecture documentation and guides
+│   ├── diagrams/                 # Graphviz .dot diagram sources
+│   ├── img/                      # Rendered diagram SVG and PNG assets
+│   └── diagrams.md               # Diagram index and markdown references
 ├── scripts/                      # Core workflow and CI automation scripts
 │   ├── check_task_delta.py       # Validates task deltas against code diff
 │   ├── merge_state.py            # Regenerates pending.json and lastcontext.json
@@ -56,9 +63,42 @@ afaw-anti-fragile-agentic-workflow/
 └── README.md                     # Project documentation and structure overview
 ```
 
+---
+
 ## Core Principles
 
-- **Deterministic Verification**: Every claim is measured. Tests, linters, and type checks run in CI.
+- **Deterministic Verification**: Every metric is measured, not estimated. Tests, linters, and type checks enforce standards.
+- **Fast Local Feedback & CI Scaling**: Fast checks (linters, type checks, diff tests) run in seconds locally; heavy suites (AST mutation, full integration, load) run parallelized in CI.
 - **Context & Task Atomic Deltas**: Code changes require task context deltas (`context/tasks/task_NNN_context.json`) listing all touched files.
-- **Generated State Isolation**: Aggregated state (`state/pending.json` and `context/global/lastcontext.json`) is never modified by hand; it is compiled automatically by CI.
-- **Strict Layer Isolation**: Clear boundaries between adaptors, services, domain logic, and external tool execution.
+- **Generated State Isolation**: Aggregated state (`state/pending.json` and `context/global/lastcontext.json`) is never modified manually; it is compiled automatically by CI.
+- **Strict Layer Isolation**: Clear separation between adaptors, services, domain logic, and external tool execution.
+- **Human-in-the-Loop**: PRs require explicit human review and approval before merging into `main`.
+
+---
+
+## Workflow & Architecture Diagrams
+
+### 1. Task Lifecycle
+Each task progresses through an isolated branch workflow with deterministic checks and explicit sign-offs:
+
+![Life of a task](docs/img/02-task-lifecycle.svg)
+
+### 2. State & Context Management
+Agents write only atomic task files and context deltas. Shared state is generated deterministically by CI:
+
+![State and Context](docs/img/03-state-and-context.svg)
+
+### 3. CI/CD Pipeline
+Path-based triggers route changes to parallel jobs, avoiding redundant runs for docs-only changes:
+
+![CI Pipeline](docs/img/04-ci-pipeline.svg)
+
+### 4. Mutation Testing on Diffs
+Measures fragility by mutating modified code with AST to guarantee test suite coverage and efficacy:
+
+![Mutation Testing](docs/img/05-mutation-testing.svg)
+
+### 5. Control Layers
+Defense in depth from prompt instructions down to branch protection rules:
+
+![Control Layers](docs/img/06-control-layers.svg)

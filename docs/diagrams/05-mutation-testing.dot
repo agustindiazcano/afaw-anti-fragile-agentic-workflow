@@ -1,0 +1,41 @@
+digraph mutation_testing {
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.3, nodesep=0.5, ranksep=0.45, splines=true, rankdir=TB];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=13, color="#15803d", fillcolor="#dcfce7", fontcolor="#1f2933", penwidth=1.2, margin="0.25,0.12"];
+  edge  [fontname="Helvetica", fontsize=11, color="#52606d", fontcolor="#3e4c59", arrowsize=0.8, penwidth=1.1];
+
+  node [fillcolor="#f5f7fa", color="#52606d"];
+  cfg  [label="state/config.json\nmutation_critical_paths, mutation_min_score"];
+
+  node [fillcolor="#dcfce7", color="#15803d"];
+  diff [label="Only new or modified files\nscripts.mutation_targets --base origin/main\nlists mandatory and optional files and the minimum score"];
+  base [shape=diamond, style="filled", margin="0.05,0.05", label="Baseline:\ndoes the suite pass\non unmodified code?"];
+
+  node [fillcolor="#fee2e2", color="#b91c1c"];
+  stop [label="Stop and fix the baseline\notherwise every mutant counts as killed\nand a false 100% results"];
+
+  node [fillcolor="#dcfce7", color="#15803d"];
+  gen  [label="Generate mutants with AST\nrun in parallel in CI"];
+  run  [label="Re-run the tests\nfor each mutant"];
+  sur  [shape=diamond, style="filled", margin="0.05,0.05", label="Surviving\nmutants?"];
+
+  node [fillcolor="#e1effe", color="#1c64f2"];
+  fix  [label="Write or improve tests\nEquivalent mutants: report them,\nno artificial tests"];
+
+  node [fillcolor="#dcfce7", color="#15803d"];
+  score [shape=diamond, style="filled", margin="0.05,0.05", label="Mandatory file below\nthe minimum score?"];
+  ok    [label="Passes\n(optional files: each project decides)"];
+
+  node [fillcolor="#fee2e2", color="#b91c1c"];
+  block [label="The PR is blocked\nMandatory in critical modules: money, security,\nconcurrency and public contracts"];
+
+  cfg -> diff [style=dashed];
+  diff -> base;
+  base -> stop [label=" no"];
+  base -> gen [label=" yes"];
+  gen -> run -> sur;
+  sur -> fix [label=" yes"];
+  fix -> run [label=" launch again", constraint=false];
+  sur -> score [label=" no"];
+  score -> block [label=" yes"];
+  score -> ok [label=" no"];
+}

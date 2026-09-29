@@ -1,0 +1,40 @@
+digraph overview {
+  graph [fontname="Helvetica", fontsize=13, bgcolor="white", pad=0.3, nodesep=0.5, ranksep=0.6, splines=true, rankdir=TB];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=13, color="#52606d", fillcolor="#f5f7fa", fontcolor="#1f2933", penwidth=1.2, margin="0.25,0.14"];
+  edge  [fontname="Helvetica", fontsize=11, color="#52606d", fontcolor="#3e4c59", arrowsize=0.8, penwidth=1.1];
+
+  node [fillcolor="#fef3c7", color="#b45309"];
+  human   [label="Human (orchestrator)\nopens one terminal per agent\nand gives each a ROL:"];
+  approve [label="Human approves every PR manually\nNo merge without an explicit directive"];
+
+  subgraph cluster_agents {
+    label="Isolated agents, one terminal each\nRead state at session start. Write only their own delta and task file.";
+    labeljust=c; fontsize=12; fontcolor="#1c64f2"; style="rounded,dashed"; color="#1c64f2"; margin=16;
+    node [fillcolor="#e1effe", color="#1c64f2"];
+    a1 [label="Agent A\nbranch feat/task-a\nTDD, atomic commits"];
+    a2 [label="Agent B\nbranch feat/task-b\nTDD, atomic commits"];
+    a3 [label="Agent N\nbranch feat/task-n\nTDD, atomic commits"];
+  }
+
+  node [fillcolor="#dcfce7", color="#15803d"];
+  ci      [label="CI in the cloud\ntests, lint, types, mutation\nparallel jobs with path filters"];
+  merge   [label="State regeneration in CI\nscripts/merge_state.py"];
+
+  node [fillcolor="#f5f7fa", color="#52606d"];
+  pr      [label="Pull request\nwith the CI run link"];
+  main    [label="main\nno direct commits or pushes"];
+  statepr [label="State PR opened by CI\npending.json, lastcontext.json"];
+
+  human -> a1;
+  human -> a2;
+  human -> a3;
+  a1 -> ci [label=" push task branch"];
+  a2 -> ci;
+  a3 -> ci;
+  ci -> pr [label=" checks pass"];
+  pr -> approve;
+  approve -> main [label=" merge"];
+  main -> merge [label=" after merge"];
+  merge -> statepr;
+  statepr -> approve [constraint=false, style=dashed, label=" also approved by the human"];
+}
