@@ -1,0 +1,12 @@
+{
+  "id": "task_999",
+  "title": "Setup branch protection script",
+  "role": "architect",
+  "type": "chore",
+  "status": "done",
+  "owner": "agent",
+  "branch": "feat/template-ready",
+  "priority": 5,
+  "difficulty": 1,
+  "blocked_by": []
+}

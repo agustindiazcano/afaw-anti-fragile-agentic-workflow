@@ -1,0 +1,5 @@
+{
+  "task_id": "task_004",
+  "files_touched": [],
+  "summary": "Replaced 'ROL:' with 'ROLE:' in the instruction and documentation files, and added the official DOI 10.5281/zenodo.23050310 to the paper. Documents only, so no code files. Migrated to the v1.1 delta schema by task_001."
+}
