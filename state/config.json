@@ -1,7 +1,8 @@
 {
+  "_comment": "mutation_critical_paths lists directories where mutation testing is strictly enforced. mutation_min_score is the required percentage of killed mutants.",
   "code_prefixes": ["src/", "tests/", "scripts/"],
   "ignored_names": [".gitkeep"],
   "test_prefixes": ["tests/"],
-  "mutation_critical_paths": [],
+  "mutation_critical_paths": ["src/back/domain/", "src/back/security/"],
   "mutation_min_score": 80
 }

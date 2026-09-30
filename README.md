@@ -5,16 +5,16 @@ An anti-fragile, multi-agent workflow framework designed for resilient, adaptive
 ---
 
 ## Index
-
 1. **[System Overview](#system-overview)**: High-level multi-agent topology, branch isolation, cloud CI, and human sign-off.
 2. **[Directory Structure](#directory-structure)**: Repository layout, modular agent skills, state definitions, and tooling.
-3. **[Core Principles](#core-principles)**: Deterministic verification, fast local feedback, atomic context deltas, and defense-in-depth.
-4. **[Workflow & Architecture Diagrams](#workflow--architecture-diagrams)**:
-   - 4.1 **[Task Lifecycle](#1-task-lifecycle)**: 12-step lifecycle from session start (`ROL:` consultation) to merge and branch deletion.
-   - 4.2 **[State & Context Management](#2-state--context-management)**: Source of truth in atomic task files (`state/tasks/`), agent context deltas, and automated CI consolidation.
-   - 4.3 **[CI/CD Pipeline](#3-cicd-pipeline)**: Path-filtered parallel jobs and docs-only fast-paths.
-   - 4.4 **[Mutation Testing on Diffs](#4-mutation-testing-on-diffs)**: AST mutant injection, survivor elimination, and critical threshold enforcement.
-   - 4.5 **[Control Layers](#5-control-layers)**: Defense-in-depth from guidelines to branch protection.
+3. **[Getting Started](#getting-started)**: Initialization steps for new repositories.
+4. **[Core Principles](#core-principles)**: Deterministic verification, fast local feedback, atomic context deltas, and defense-in-depth.
+5. **[Workflow & Architecture Diagrams](#workflow--architecture-diagrams)**:
+   - 5.1 **[Task Lifecycle](#1-task-lifecycle)**: 12-step lifecycle from session start (`ROL:` consultation) to merge and branch deletion.
+   - 5.2 **[State & Context Management](#2-state--context-management)**: Source of truth in atomic task files (`state/tasks/`), agent context deltas, and automated CI consolidation.
+   - 5.3 **[CI/CD Pipeline](#3-cicd-pipeline)**: Path-filtered parallel jobs and docs-only fast-paths.
+   - 5.4 **[Mutation Testing on Diffs](#4-mutation-testing-on-diffs)**: AST mutant injection, survivor elimination, and critical threshold enforcement.
+   - 5.5 **[Control Layers](#5-control-layers)**: Defense-in-depth from guidelines to branch protection.
 
 ---
 
@@ -82,6 +82,19 @@ afaw-anti-fragile-agentic-workflow/
 ├── pyproject.toml                # Tooling config (ruff, mypy, pytest)
 └── README.md                     # Project documentation and structure overview
 ```
+
+---
+
+## Getting Started
+
+When you create a new repository from this template, GitHub does **not** copy branch protection rules, required checks, or repository secrets. You must configure them in your new repo.
+
+1. **Use the Template**: Create your new repository from this template.
+2. **Configure State Limits**: Edit `state/config.json` to define your project's code folders and mutation thresholds.
+3. **Set Secrets**: Copy `.env.example` to `.env` and set your credentials. Add required secrets to your GitHub repository settings.
+4. **Enforce Branch Protection**: Run `bash scripts/setup_protection.sh` (requires `gh` CLI logged in) to enforce CI checks (`lint`, `typecheck`, `tests`, `task-delta`) and block direct pushes to `main`.
+5. **Verify CI**: Open a test pull request to confirm the automated CI checks are running and passing.
+6. **Start Working**: Open a terminal, invoke your agent, and answer the initial `ROL:` prompt to begin.
 
 ---
 
