@@ -27,6 +27,8 @@ h1{font-size:22px;margin:0 0 4px}
 h2{font-size:16px;margin:32px 0 12px}
 .meta{color:var(--muted);margin:0 0 20px}
 .warn{border:1px solid var(--yellow);border-radius:8px;padding:10px 12px;margin:0 0 20px}
+.banner{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:0 0 16px;
+  background:var(--card);font-weight:600}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
 .tile{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px}
 .tile b{display:block;font-size:22px}
@@ -398,6 +400,7 @@ def dashboard(
     all_rows: Sequence[Mapping[str, Any]],
     metrics: Mapping[str, Any],
     has_facts: bool,
+    banner: str | None = None,
 ) -> str:
     counts = metrics["tasks_by_status"]
     lights = metrics["lights"]
@@ -424,6 +427,7 @@ def dashboard(
         f"{k['decisions_proposed']} proposed, {k['gotchas_active']} active gotchas "
         f"(budget {k['budget']}).</p>"
     )
+    banner_html = f'<p class="banner">{escape(banner)}</p>' if banner else ""
     warn = (
         ""
         if has_facts
@@ -438,7 +442,8 @@ def dashboard(
         "<h1>Project status</h1>"
         f'<p class="meta">Derived from origin/main as of {escape(metrics["as_of"])}. '
         f"{len(all_rows)} tasks; CI measured for {metrics['ci_measured_tasks']}.</p>"
-        f'{warn}{knowledge}{_progress(metrics)}<div class="tiles">{tiles_html}</div>'
+        f"{banner_html}{warn}{knowledge}{_progress(metrics)}"
+        f'<div class="tiles">{tiles_html}</div>'
         f'{_charts(metrics)}'
         f"<h2>Board</h2>{_board(open_rows, datetime.fromisoformat(metrics['as_of']))}"
         f"<h2>Timing and CI cost</h2>{_summary_table(metrics)}"

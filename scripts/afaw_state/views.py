@@ -165,7 +165,9 @@ def build(
         "context/global/LASTCONTEXT.md": context.global_lastcontext(
             rows, deltas, docs, metrics, cfg
         ),
-        "dashboard.html": render.dashboard(open_rows, done_rows, rows, metrics, bool(facts)),
+        "dashboard.html": render.dashboard(
+            open_rows, done_rows, rows, metrics, bool(facts), cfg.get("banner")
+        ),
     }
     for role in sorted({r["role"] for r in rows}):
         outputs[f"context/roles/{role}/LASTCONTEXT.md"] = context.role_lastcontext(
