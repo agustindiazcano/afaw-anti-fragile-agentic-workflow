@@ -1,17 +1,20 @@
 """Fail a PR that changes code without a valid context delta.
 
-Rule (CLAUDE.md, section 1): finishing a task means writing
+Rule (AGENTS.md, section 1): finishing a task means writing
 context/tasks/task_NNN_context.json. The delta must be valid against its schema, its task must
-exist in state/tasks/, and every changed code file must be listed in its files_touched.
+exist in state/tasks/, and files_touched must equal the set of code files the PR changes: a
+missing file and an extra file are both reported, so the field is measured, not declared.
 A PR that changes no code (docs only) always passes.
 
 Run in CI: python -m scripts.check_task_delta --base origin/main
+Fill a delta: python -m scripts.check_task_delta --base origin/main --write task_NNN
 Exit codes: 0 ok, 1 problems found (listed on stderr), 2 could not run (details on stderr).
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -52,7 +55,7 @@ def find_problems(changed: list[str], root: Path) -> list[str]:
     if not delta_paths:
         return [
             "Code changed but the PR has no context delta "
-            "(context/tasks/task_NNN_context.json, see CLAUDE.md section 1)."
+            "(context/tasks/task_NNN_context.json, see AGENTS.md section 1)."
         ]
     schema = load_json(root / DELTA_SCHEMA_PATH)
     problems: list[str] = []
@@ -76,18 +79,46 @@ def find_problems(changed: list[str], root: Path) -> list[str]:
         problems.append(
             "Changed code files not listed in any delta's files_touched: " + ", ".join(missing)
         )
+    extra = sorted(listed - set(code))
+    if extra:
+        problems.append(
+            "files_touched lists files not changed by this pull request: " + ", ".join(extra)
+        )
     return problems
 
 
+def write_files_touched(task_id: str, changed: list[str], root: Path) -> Path:
+    """Set files_touched of the task's delta to the changed code files; create the delta if needed.
+
+    The agent runs this instead of writing the list by hand, so the field is measured.
+    Writes context/tasks/<task_id>_context.json and returns its path.
+    """
+    config = load_config(root)
+    path = root / "context" / "tasks" / f"{task_id}_context.json"
+    delta = load_json(path) if path.exists() else {"task_id": task_id}
+    delta["files_touched"] = sorted(p for p in changed if config.is_code(p))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(delta, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
 def main(argv: list[str] | None = None) -> int:
-    """Check the current branch against --base and report every problem found."""
+    """Check the current branch against --base, or fill a delta's files_touched with --write."""
     parser = argparse.ArgumentParser(description="Require a context delta when code changes.")
     parser.add_argument("--root", default=".", help="project root (default: current directory)")
     parser.add_argument("--base", required=True, help="git ref to compare with, e.g. origin/main")
+    parser.add_argument(
+        "--write", metavar="TASK_ID", help="fill files_touched of this task's delta from the diff"
+    )
     args = parser.parse_args(argv)
     root = Path(args.root)
     try:
-        problems = find_problems(changed_files(args.base, root), root)
+        changed = changed_files(args.base, root)
+        if args.write:
+            path = write_files_touched(args.write, changed, root)
+            sys.stdout.write(f"OK: wrote files_touched to {path}\n")
+            return 0
+        problems = find_problems(changed, root)
     except StateError as exc:
         sys.stderr.write(f"ERROR: {exc}\n")
         return 2

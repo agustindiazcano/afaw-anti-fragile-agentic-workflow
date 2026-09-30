@@ -13,4 +13,4 @@ Use this skill when the user asks to commit changes or use `/commit`.
 4. Generate a commit message in **Conventional Commits** format (`feat: ...`, `fix: ...`, `chore: ...`, `docs: ...`), matching this repo's existing log style (`git log --oneline -10`). Focus on *why*, not a restatement of the diff.
 5. Commit: `git commit -m "<message>"`.
 
-Do not push unless explicitly requested — see the `ship` and `push-dev` skills for that. Never commit directly to `main` (CLAUDE.md Section 11) — if the current branch is `main`, stop and ask.
+Do not push unless explicitly requested — see the `ship` and `push-dev` skills for that. Never commit directly to `main` (AGENTS.md, section 18) — if the current branch is `main`, stop and ask.

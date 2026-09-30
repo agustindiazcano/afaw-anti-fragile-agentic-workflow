@@ -12,10 +12,8 @@ set -e
 #   PR to be merged by the owner if approvals are 0, while still forcing CI to pass.
 #   (If you want strict approvals, change --required-approvals 1).
 # - Requires specific status checks to pass before merging:
-#   * 'lint' (from scripts-ci.yml)
-#   * 'typecheck' (from scripts-ci.yml)
-#   * 'tests' (from scripts-ci.yml)
-#   * 'task-delta' (from task-delta-check.yml)
+#   * 'lint', 'typecheck', 'tests' (scripts-ci.yml; skipped, and so passing, on documents-only PRs)
+#   * 'state-and-docs' (checks.yml: task files, delta, red-first, ADRs and links, derived views)
 
 echo "Setting up branch protection for 'main'..."
 
@@ -32,7 +30,7 @@ gh api \
   -f "required_status_checks[contexts][]=lint" \
   -f "required_status_checks[contexts][]=typecheck" \
   -f "required_status_checks[contexts][]=tests" \
-  -f "required_status_checks[contexts][]=task-delta" \
+  -f "required_status_checks[contexts][]=state-and-docs" \
   -f "restrictions=null" \
   -F "required_linear_history=false" \
   -F "allow_force_pushes=false" \

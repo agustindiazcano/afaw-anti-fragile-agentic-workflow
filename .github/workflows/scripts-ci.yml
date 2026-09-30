@@ -1,23 +1,39 @@
 name: Scripts CI
 
-# Lint, type-check and tests for the state scripts. Three parallel jobs, and only when
-# the scripts, their tests, the schemas or the tool config change.
+# Lint, type-check and tests for the state scripts, hooks and examples. The workflow runs on
+# every pull request, and a first job decides whether any tooling file changed. When nothing
+# did (a documents-only change), the three jobs are skipped by their condition; GitHub reports
+# a job skipped that way as successful, so a required check never blocks a documents-only PR.
+# (A path filter on the trigger would leave required checks pending forever: see
+# docs/gotchas/0001-required-checks-with-path-filters.md.)
 # Dev dependencies come from the "dev" group in pyproject.toml (needs pip >= 25.1).
 on:
   pull_request:
-    paths:
-      - "scripts/**"
-      - "tests/tooling/**"
-      - "state/schemas/**"
-      - "state/config.json"
-      - "pyproject.toml"
-      - ".github/workflows/scripts-ci.yml"
 
 permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: filter
+        run: |
+          pattern='^(scripts/|tests/|examples/|\.claude/hooks/|state/schemas/|state/config\.json|pyproject\.toml|\.github/workflows/scripts-ci\.yml)'
+          if git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -qE "$pattern"; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   lint:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,9 +43,11 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
       - run: python -m pip install --upgrade pip && pip install --group dev
-      - run: ruff check scripts tests/tooling
+      - run: ruff check scripts tests examples .claude/hooks
 
   typecheck:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,13 +60,20 @@ jobs:
       - run: mypy --strict scripts
 
   tests:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the CLI tests run git
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: pyproject.toml
       - run: python -m pip install --upgrade pip && pip install --group dev
+      - run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
       - run: pytest tests/tooling -q
