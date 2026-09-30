@@ -106,6 +106,7 @@ def test_refuses_foreign_output_directory(repo):
     (repo / "build/state/keep.txt").write_text("mine")
     result = build(repo)
     assert result.returncode != 0
+    assert "refusing to overwrite" in result.stderr
     assert (repo / "build/state/keep.txt").exists()
 
 

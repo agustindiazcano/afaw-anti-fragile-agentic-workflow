@@ -62,6 +62,9 @@ def test_destructive_commands_ask(command: str) -> None:
     assert guard("Bash", command=command)[0] == "ask"
 
 
+@pytest.mark.characterization(
+    reason="the v1.0 guard already allowed ordinary commands; kept as a regression test"
+)
 @pytest.mark.parametrize(
     "command",
     [
@@ -86,17 +89,30 @@ def test_agent_cannot_write_human_or_generated_files(path: str) -> None:
 
 @pytest.mark.parametrize(
     "path",
-    [".env", "config/.env.prod", "migrations/0003_drop.py", "alembic/versions/a1.py",
-     ".github/workflows/checks.yml", "state/config.json", "CODEOWNERS"],
+    [
+        ".env",
+        "config/.env.prod",
+        "migrations/0003_drop.py",
+        "alembic/versions/a1.py",
+        ".github/workflows/checks.yml",
+        "state/config.json",
+        "CODEOWNERS",
+    ],
 )
 def test_protected_files_ask(path: str) -> None:
     assert guard("Edit", file_path=path)[0] == "ask"
 
 
+@pytest.mark.characterization(
+    reason="the v1.0 guard already allowed ordinary files; kept as a regression test"
+)
 def test_ordinary_file_allowed() -> None:
     assert guard("Edit", file_path="src/back/orders.py")[0] == "allow"
 
 
+@pytest.mark.characterization(
+    reason="the v1.0 guard already ignored invalid payloads; kept as a regression test"
+)
 def test_unparseable_payload_is_allowed_silently() -> None:
     result = subprocess.run(
         [sys.executable, str(GUARD)], input="not json", capture_output=True, text=True, timeout=30
