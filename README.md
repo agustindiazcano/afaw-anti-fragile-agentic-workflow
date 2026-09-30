@@ -8,21 +8,43 @@ Several coding agents working on one repository fail in predictable ways: they c
 
 **White paper (PDF): [`docs/paper/afaw.pdf`](docs/paper/afaw.pdf)** · LaTeX source: [`docs/paper/afaw.tex`](docs/paper/afaw.tex) · DOI [10.5281/zenodo.23050310](https://doi.org/10.5281/zenodo.23050310)
 
+**Live demo: [agustindiazcano.github.io/afaw-anti-fragile-agentic-workflow](https://agustindiazcano.github.io/afaw-anti-fragile-agentic-workflow/)** · this repository's own dashboard: [`/live/`](https://agustindiazcano.github.io/afaw-anti-fragile-agentic-workflow/live/)
+
+---
+
+## Demo dashboard
+
+A dashboard built by `scripts/build_state.py` from mock data: a fictional project whose every task and number is invented ([`examples/mock_dashboard.py`](examples/mock_dashboard.py)). It shows each traffic-light rule firing: CI failing, a blocker not done, no activity for three days, nothing measured.
+
+![Demo dashboard, top: progress, status tiles, tasks by status and tasks merged per day.](docs/screenshots/dashboard-overview.png)
+
+![Demo dashboard, board: tasks in progress, pending and in the backlog, with ages and traffic lights and the reason for each.](docs/screenshots/dashboard-board.png)
+
+<details>
+<summary>Dark mode</summary>
+
+![Demo dashboard in dark mode.](docs/screenshots/dashboard-overview-dark.png)
+
+</details>
+
+Build it locally: `python -m examples.mock_dashboard mock-output` and open `mock-output/index.html`.
+
 ---
 
 ## Index
 
-1. [Core principle](#core-principle-the-ai-decides-the-engine-measures)
-2. [Failure modes and mechanisms](#failure-modes-and-mechanisms)
-3. [System overview](#system-overview)
-4. [How it works](#how-it-works)
-5. [The life of a task](#the-life-of-a-task)
-6. [Directory structure](#directory-structure)
-7. [Getting started](#getting-started)
-8. [Daily workflow](#daily-workflow)
-9. [Scope and limits](#scope-and-limits)
-10. [Rebuilding the diagrams and the paper](#rebuilding-the-diagrams-and-the-paper)
-11. [Citation, author, license](#citation)
+1. [Demo dashboard](#demo-dashboard)
+2. [Core principle](#core-principle-the-ai-decides-the-engine-measures)
+3. [Failure modes and mechanisms](#failure-modes-and-mechanisms)
+4. [System overview](#system-overview)
+5. [How it works](#how-it-works)
+6. [The life of a task](#the-life-of-a-task)
+7. [Directory structure](#directory-structure)
+8. [Getting started](#getting-started)
+9. [Daily workflow](#daily-workflow)
+10. [Scope and limits](#scope-and-limits)
+11. [Rebuilding the diagrams and the paper](#rebuilding-the-diagrams-and-the-paper)
+12. [Citation, author, license](#citation)
 
 ---
 
@@ -85,7 +107,7 @@ No commits or pushes to `main`, no merge without an explicit human directive, an
 
 ### 6. Dashboard
 
-A static HTML page (no scripts) with progress, tasks by status, tasks merged per day, the board with ages and lights, timing (agent time, review latency, lead time) and CI cost (runs, queue time, job minutes). `.github/workflows/dashboard.yml` rebuilds it on every push to `main`, every hour and on demand, and publishes it on GitHub Pages. A Pages site is public: do not publish the dashboard of a private project.
+A static HTML page (no scripts) with progress, tasks by status, tasks merged per day, the board with ages and lights, timing (agent time, review latency, lead time) and CI cost (runs, queue time, job minutes). `.github/workflows/dashboard.yml` rebuilds it on every push to `main`, every hour and on demand, and publishes it on GitHub Pages: the demo at the site root and this repository's own dashboard at `/live/`. A Pages site is public: do not publish the dashboard of a private project.
 
 ## The life of a task
 
@@ -119,6 +141,7 @@ A static HTML page (no scripts) with progress, tasks by status, tasks merged per
 │   ├── gotchas/                   # Operational traps, closed as resolved or promoted
 │   ├── templates/                 # ADR and gotcha templates
 │   ├── diagrams/ and img/         # Graphviz sources and rendered figures
+│   ├── screenshots/               # Screenshots of the demo dashboard
 │   └── paper/                     # The white paper: afaw.pdf and its source afaw.tex
 ├── scripts/
 │   ├── afaw_state/                # Model, facts, lights, durations, views, dashboard
@@ -132,7 +155,7 @@ A static HTML page (no scripts) with progress, tasks by status, tasks merged per
 │   ├── mutation_gate.py           # Score with human-accepted equivalences only
 │   ├── rules_to_tex.py            # The paper's appendix from AGENTS.md
 │   └── setup_protection.sh        # Branch protection and required checks
-├── examples/mock_dashboard.py     # Preview the dashboard and LASTCONTEXT.md with mock data
+├── examples/mock_dashboard.py     # The demo: dashboard and LASTCONTEXT.md from mock data
 ├── src/                           # The project's code
 └── tests/tooling/                 # Tests of the scripts and hooks
 ```
@@ -156,7 +179,7 @@ GitHub does not copy branch protection, required checks or Pages settings to a r
 2. The agent creates its branch, works with TDD running only its own test, and pushes; CI verifies the rest.
 3. At the end it writes `summary` and `next`, fills `files_touched` with `python -m scripts.check_task_delta --base origin/main --write task_NNN`, records any decision as an ADR, and asks before opening the pull request.
 4. You review and merge. Nothing else to approve: the views are derived.
-5. Ask for status at any time, or open the dashboard. Preview it without a repository: `python examples/mock_dashboard.py`.
+5. Ask for status at any time, or open the dashboard.
 
 ## Scope and limits
 

@@ -1,0 +1,18 @@
+{
+  "task_id": "task_003",
+  "files_touched": [
+    "examples/__init__.py",
+    "examples/mock_dashboard.py",
+    "scripts/afaw_state/render.py",
+    "scripts/afaw_state/views.py",
+    "tests/tooling/test_mock_dashboard.py",
+    "tests/tooling/test_render.py",
+    "tests/tooling/test_views.py"
+  ],
+  "summary": "Demo dashboard from mock data, published by dashboard.yml at the Pages root (this repo's own dashboard at /live/), with a banner saying the data is invented; screenshots (light, board, dark) in the README. Found and fixed a merged CSS bug that left the page unstyled in light mode.",
+  "next": [
+    "Enable GitHub Pages: Settings -> Pages -> Source: GitHub Actions (the proxy blocks this API)",
+    "After merging, check the first Pages deployment of dashboard.yml",
+    "Delete the merged branches feat/afaw-v1-1-derived-state and docs/commit-paper-pdf"
+  ]
+}
