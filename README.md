@@ -37,6 +37,8 @@ Build it locally: `python -m examples.mock_dashboard mock-output` and open `mock
 - **The project documents itself.** Every task leaves what was done, what is left and, for each decision, why it was taken. When agents do the work, that is usually lost: afterwards nobody knows what was done or why.
 - **A new agent understands the project in minutes.** Instead of reading every file from scratch, it reads one generated index (`LASTCONTEXT.md`) and follows links to the decisions it needs. Less reading means fewer tokens and less time, and the saving grows with the project.
 
+- **Fewer status meetings.** "What did you do, where does it stand, what's blocked, why was this decided": the board and the records already answer it, and an optional assistant can answer it in a chat. See [Ask the project](#optional-ask-the-project).
+
 These are the expected gains, not measured ones yet. The dashboard already records timings and CI cost, and the paper's evaluation protocol says how to measure all four.
 
 ## Method and this implementation
@@ -50,6 +52,24 @@ The method does not require these exact tools. Write your tests however you like
 | Heavy checks in the cloud, not on the agent's machine | Hooks, for another agent or tool | Timings and CI cost |
 | One branch per task, no push to `main`, a human approves | The format of decision records | Per-role context files |
 | The red step checked by a tool, not reported by the agent | The language of the rules file | |
+| | The retrieval stack of the assistant | An assistant that answers from the records ([ask the project](#optional-ask-the-project)) |
+
+## Optional: ask the project
+
+Because everything is recorded as the work happens, you can put an assistant with RAG on top: it searches the project's records and answers questions in a chat. It is not part of the method, just an optional use of what the method already records.
+
+**What it replaces: status meetings.** "What did you do, where does it stand, what's blocked, why was this decided." The board, `LASTCONTEXT.md` and the decision records already answer that. The assistant answers the same questions any time, to anyone, without taking an hour from five people.
+
+**Why it works well here.** Every document is about one thing: one decision per ADR, one trap per gotcha, one delta per task. They split into clean pieces. The front matter says whether a decision is still in force, so the assistant can skip the ones that were replaced. `LASTCONTEXT.md` is the entry point. And every fact has a path, so each answer can cite where it came from and anyone can check it.
+
+**What it doesn't replace.**
+- **Meetings where things get decided.** Priorities, trade-offs, disagreements still need people. The records say what was decided, not what to decide. Those meetings do get shorter: nobody spends the first half working out where things stand.
+- **What nobody wrote down.** A decision made in a hallway and never turned into an ADR doesn't exist for the assistant.
+- **Records that went stale.** If an ADR stopped being true and nobody replaced it, the assistant answers with confidence and gets it wrong.
+
+**Two rules for the assistant.**
+- **Numbers are copied, not paraphrased.** Progress, lead time, CI cost: quote them from the derived views. An assistant that "summarizes" metrics can invent them.
+- **Read-only.** It answers; it never writes to the repository, opens pull requests or changes state.
 
 ---
 
@@ -58,17 +78,18 @@ The method does not require these exact tools. Write your tests however you like
 1. [Demo dashboard](#demo-dashboard)
 2. [Why use it](#why-use-it)
 3. [Method and this implementation](#method-and-this-implementation)
-4. [Core principle](#core-principle-the-ai-decides-the-engine-measures)
-5. [Failure modes and mechanisms](#failure-modes-and-mechanisms)
-6. [System overview](#system-overview)
-7. [How it works](#how-it-works)
-8. [The life of a task](#the-life-of-a-task)
-9. [Directory structure](#directory-structure)
-10. [Getting started](#getting-started)
-11. [Daily workflow](#daily-workflow)
-12. [Scope and limits](#scope-and-limits)
-13. [Rebuilding the diagrams and the paper](#rebuilding-the-diagrams-and-the-paper)
-14. [Citation, author, license](#citation)
+4. [Optional: ask the project](#optional-ask-the-project)
+5. [Core principle](#core-principle-the-ai-decides-the-engine-measures)
+6. [Failure modes and mechanisms](#failure-modes-and-mechanisms)
+7. [System overview](#system-overview)
+8. [How it works](#how-it-works)
+9. [The life of a task](#the-life-of-a-task)
+10. [Directory structure](#directory-structure)
+11. [Getting started](#getting-started)
+12. [Daily workflow](#daily-workflow)
+13. [Scope and limits](#scope-and-limits)
+14. [Rebuilding the diagrams and the paper](#rebuilding-the-diagrams-and-the-paper)
+15. [Citation, author, license](#citation)
 
 ---
 

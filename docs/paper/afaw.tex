@@ -350,6 +350,7 @@ State written per task, never shared; shared views derived (F2) & The CI system 
 Measured values, never declared by the agent (F3) & The mutation engine & Mutation testing outside critical modules\\
 Heavy checks outside the agent's machine (F5) & Hooks, for another agent or tool & Timings and CI cost\\
 One branch per task; no push to \code{main}; human sign-off (F1, F6) & The format of decision records & The per-role last-context files\\
+ & The retrieval stack of the assistant & An assistant that answers from the records (Section~\ref{sec:rag})\\
 A red step verified by a tool, not reported by the agent (F4) & The language of the rules file & \\
 \bottomrule
 \end{tabularx}
@@ -369,7 +370,30 @@ The mechanisms have a cost: a one-time setup, and per task a task file, a delta 
   \item[It makes agents' work visible to a team.] With two or ten developers, each running their own agents, the problem becomes knowing what the others' agents changed, why, and where each task stands. Every task, decision and status is recorded in the same place and the same format, whoever or whatever did the work, and the board and the last-context file show it to everyone. The setup is done once, from the template.
   \item[It documents the project as it goes.] Every task leaves a summary, the next steps and, for each decision, a record of why it was taken. Without this, when agents do the work, nobody knows afterwards what was done or why. The generated last-context file is an index to that record.
   \item[A new agent understands the project faster.] An agent that starts from nothing has to read the whole repository to work out what was decided and why. With the index, it reads one file and follows links to the decisions it needs. That is less context, fewer tokens and less time, and the saving grows with the project (RQ5).
+  \item[Fewer status meetings.] Because what was done, why, and where each task stands is recorded when the work happens, a person does not have to gather others to find out. The board answers most of it, and an optional assistant can answer the rest in conversation (Section~\ref{sec:rag}, RQ6).
 \end{description}
+
+\subsection{Optional: an assistant that answers from the project's records}
+\label{sec:rag}
+
+The records the method produces can feed an assistant that answers questions about the project by retrieval-augmented generation (RAG): it searches the documents and answers from what it finds. The assistant is not part of the method. It is an optional use of what the method records, and its benefit is a hypothesis like the others.
+
+\textbf{What it can replace.} Status meetings. The questions they exist for (what was done, where each task stands, what is blocked and why, why something was decided) are answered by the board, the last-context file and the decision records. The assistant answers the same questions at any time, to anyone, without taking an hour from several people.
+
+\textbf{Why the records suit retrieval.} Each document covers one subject: one decision record per decision, one gotcha per trap, one delta per task. Documents split into self-contained passages without cutting an idea in half. The front matter carries status and tags, so the assistant can keep to decisions in force and skip those that were superseded; retrieval over loose documents mixes old decisions with current ones. The last-context file is a ready-made entry point, and every fact has a path, so each answer can cite its source and anyone can check it.
+
+\textbf{What it cannot replace.}
+\begin{itemize}
+  \item \emph{Meetings where things are decided.} Priorities, trade-offs and disagreements need people. The records say what was decided, not what to decide, although such meetings get shorter when nobody has to reconstruct the current state first.
+  \item \emph{What was never written down.} The assistant knows only what is recorded. A decision taken in conversation and never turned into a record does not exist for it; the method pushes to record decisions but cannot force it.
+  \item \emph{Records that went stale.} A decision record whose text stopped being true, and was never superseded, produces a confident wrong answer.
+\end{itemize}
+
+\textbf{Two rules}, both following from the design principles.
+\begin{itemize}
+  \item \emph{Numbers are copied, never paraphrased.} Progress, lead time, CI cost and every other figure are quoted from the derived views. An assistant that summarizes metrics in its own words can produce numbers nobody measured (P1).
+  \item \emph{The assistant is read-only.} It answers questions; it never writes to the repository, opens pull requests or changes state (P4).
+\end{itemize}
 
 % =====================================================================
 \section{From failure mode to mechanism}
@@ -434,6 +458,7 @@ The claim that AFAW helps should be tested, not assumed. This section proposes a
   \item[RQ3] What does the method cost in elapsed time, tokens, CI runs, CI queue time and CI minutes?
   \item[RQ4] How much human review effort does each pull request need, and what does the reviewer find?
   \item[RQ5] How much faster, and at what token cost, does a new agent answer questions about the project when it starts from the generated last-context file and the decision records, compared with reading the repository from nothing?
+  \item[RQ6] With an assistant that answers from the project's records, how much status-meeting time do people spend, and how often are the assistant's answers correct and backed by a cited source?
 \end{description}
 
 \textbf{Design.} Run the same task set under matched conditions: (A) a baseline with minimal agent instructions; (B) full AFAW; and ablations of B that remove one component at a time (state isolation, the red-first check, the mutation gate, two-tier execution). Fix and record the model, the tool version and the date. Randomize the order of tasks and repeat runs, because agent output is not deterministic. Tasks can come from the project's own backlog. Public issue-resolution benchmarks with hidden tests, such as SWE-bench \cite{jimenez2024}, can supply an independent ground truth that the agents' own tests cannot.
@@ -462,6 +487,7 @@ Red-first failures & Added tests that passed on the old code & CI logs\\
 Human review minutes per PR & Time a reviewer actively spends before approving (effort, unlike review latency) & Reviewer log\\
 Rule violations & Times an agent broke a rule, and by which mechanism it was caught & Hook, CI and protection logs\\
 Onboarding cost & Tokens, time and correct answers for a fresh agent on a fixed set of questions about the project, with and without the knowledge files & Agent usage logs, answer key\\
+Status meetings and answer quality & Minutes of status meetings per week; share of the assistant's answers that are correct and cite a source & Calendars, answer key\\
 \bottomrule
 \end{tabularx}
 \caption{Proposed metrics.}
