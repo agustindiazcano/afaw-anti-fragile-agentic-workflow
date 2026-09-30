@@ -4,7 +4,7 @@ digraph overview {
   edge  [fontname="Helvetica", fontsize=11, color="#52606d", fontcolor="#3e4c59", arrowsize=0.8, penwidth=1.1];
 
   node [fillcolor="#fef3c7", color="#b45309"];
-  human   [label="Human (orchestrator)\nopens one terminal per agent\nand gives each a ROL:"];
+  human   [label="Human (orchestrator)\nopens one terminal per agent\nand gives each a ROLE:"];
   approve [label="Human approves every PR manually\nNo merge without an explicit directive"];
 
   subgraph cluster_agents {

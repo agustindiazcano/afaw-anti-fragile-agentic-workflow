@@ -1,0 +1,27 @@
+{
+  "task_id": "task_004",
+  "role": "technical writer",
+  "agent": "antigravity",
+  "branch": "chore/fix-role-typo",
+  "written_at": "2026-09-30T00:15:00Z",
+  "decisions": [
+    {
+      "decision": "Replaced 'ROL:' with 'ROLE:' in all instruction and documentation files.",
+      "reason": "Corrected Spanish typo 'ROL' to English 'ROLE' per user request."
+    },
+    {
+      "decision": "Added official DOI 10.5281/zenodo.23050310 to the LaTeX whitepaper.",
+      "reason": "Fulfilled user request to include the official DOI in the document title block and declarations."
+    }
+  ],
+  "files_touched": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "README.md",
+    "docs/anti-fragile-agentic-workflow-AFAW.tex",
+    "docs/diagrams/01-overview.dot",
+    "docs/diagrams/02-task-lifecycle.dot",
+    "docs/img/01-overview.svg",
+    "docs/img/02-task-lifecycle.svg"
+  ]
+}

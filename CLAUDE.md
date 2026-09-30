@@ -6,7 +6,7 @@ Reglas reutilizables en cualquier proyecto, unificadas a partir de dos `AGENTS.m
 > **ALWAYS RESPOND IN ENGLISH.** Every reply, explanation, commit message, PR title/description and code comment is written in English, regardless of the language the user writes in.
 
 ## 1. Inicio de sesión y contexto
-1. **En el primer mensaje, consultar siempre `ROL:` al humano** (qué rol cumple este agente en el proyecto).
+1. **En el primer mensaje, consultar siempre `ROLE:` al humano** (qué rol cumple este agente en el proyecto).
 2. Además de leer los archivos de contexto (`PENDING.md`), buscar el `LASTCONTEXT` de ese rol: si existe, leerlo; si no existe, leer el `LASTCONTEXT` global.
 3. Actualizar el contexto al final de cada sesión relevante.
 4. **Al terminar una tarea:** actualizar la documentación afectada y los documentos de estado (el archivo de contexto propio de la tarea y su estado en `state/tasks/`, nunca el `LASTCONTEXT` global), y hacer un commit de documentación de la tarea (`docs(scope): ...`), aparte del commit de código, con un mensaje que diga qué se hizo. Ese commit es solo de documentos, así que no lanza tests (sección 11).
