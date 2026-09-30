@@ -126,7 +126,7 @@ When the project status is requested, build the views from `origin/main` (`git f
 
 ## 11. Code tests
 1. **Two tiers.** Locally, run only the test being written, one test or one test file at a time, to see red and green; this tier finishes in seconds and needs no external service. Everything else runs in CI: the full suite, integration and end-to-end tests, linters, type-check, mutation testing and builds.
-2. **A local red is a claim; CI measures it:** the red-first check (`python -m scripts.red_check --base origin/main`) runs the tests a pull request adds against the code before the change and requires each to fail. A task of type `tests-only` or `refactor` skips it, and the declaration is shown to the reviewer.
+2. **A local red is a claim; CI measures it:** the red-first check (`python -m scripts.red_check --base origin/main`) runs the tests a pull request adds against the code before the change and requires each to fail. A task of type `tests-only` or `refactor` skips it; a single test that documents behavior the code already has is declared with `@pytest.mark.characterization(reason="...")`. Both declarations are printed for the reviewer. A test that did not run on the old code fails the check; it never counts as passing.
 3. CI jobs are parallelized whenever possible; they are not queued.
 4. Changes in the back end launch only the back-end tests; changes in the front end, only the front-end ones.
 5. Document changes do not launch tests: only what contains code.
