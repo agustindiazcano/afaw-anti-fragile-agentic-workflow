@@ -1,0 +1,8 @@
+{
+  "task_id": "task_006",
+  "files_touched": [],
+  "summary": "Paper and README describe an optional assistant that answers from the project's records by RAG: what it replaces (status meetings), why the records suit retrieval, what it cannot replace (decisions, unrecorded knowledge, stale records) and its two rules (numbers copied from the derived views; read-only). Added 'fewer status meetings' as a benefit, RQ6 and its metric. PDF rebuilt.",
+  "next": [
+    "Build the assistant as an optional component, if wanted"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "task_006",
+  "title": "Describe the optional RAG assistant over the project records in the paper and README",
+  "role": "maintainer",
+  "type": "chore",
+  "status": "done",
+  "owner": "agent",
+  "branch": "docs/rag-project-assistant",
+  "priority": 2,
+  "difficulty": 1,
+  "blocked_by": []
+}
