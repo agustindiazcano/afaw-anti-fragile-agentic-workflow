@@ -23,12 +23,12 @@ Thumbs.db
 # Derived views and measured facts: rebuilt on demand, never committed (scripts/build_state.py)
 build/
 
-# Paper build: the appendix is generated from AGENTS.md (scripts/rules_to_tex.py)
+# Paper build: the appendix is generated from AGENTS.md (scripts/rules_to_tex.py).
+# The compiled docs/paper/afaw.pdf is committed; CI checks it changes with its sources.
 docs/paper/appendix_rules.tex
 docs/paper/*.aux
 docs/paper/*.log
 docs/paper/*.out
-docs/paper/*.pdf
 
 # Claude Code session artifacts
 .claude/scheduled_tasks.lock
