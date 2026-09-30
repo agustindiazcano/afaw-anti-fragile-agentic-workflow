@@ -13,7 +13,7 @@
 <g id="node1" class="node">
 <title>s1</title>
 <path fill="#e1effe" stroke="#1c64f2" stroke-width="1.2" d="M255.72,-989.2C255.72,-989.2 89.82,-989.2 89.82,-989.2 83.82,-989.2 77.82,-983.2 77.82,-977.2 77.82,-977.2 77.82,-965.2 77.82,-965.2 77.82,-959.2 83.82,-953.2 89.82,-953.2 89.82,-953.2 255.72,-953.2 255.72,-953.2 261.72,-953.2 267.72,-959.2 267.72,-965.2 267.72,-965.2 267.72,-977.2 267.72,-977.2 267.72,-983.2 261.72,-989.2 255.72,-989.2"/>
-<text xml:space="preserve" text-anchor="middle" x="172.77" y="-967.3" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#1f2933">1. Ask the human for ROL:</text>
+<text xml:space="preserve" text-anchor="middle" x="172.77" y="-967.3" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#1f2933">1. Ask the human for ROLE:</text>
 </g>
 <!-- s2 -->
 <g id="node2" class="node">

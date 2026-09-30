@@ -21,7 +21,7 @@
 <path fill="#fef3c7" stroke="#b45309" stroke-width="1.2" d="M390.56,-862.28C390.56,-862.28 209.44,-862.28 209.44,-862.28 203.44,-862.28 197.44,-856.28 197.44,-850.28 197.44,-850.28 197.44,-807.32 197.44,-807.32 197.44,-801.32 203.44,-795.32 209.44,-795.32 209.44,-795.32 390.56,-795.32 390.56,-795.32 396.56,-795.32 402.56,-801.32 402.56,-807.32 402.56,-807.32 402.56,-850.28 402.56,-850.28 402.56,-856.28 396.56,-862.28 390.56,-862.28"/>
 <text xml:space="preserve" text-anchor="middle" x="300" y="-840.5" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#1f2933">Human (orchestrator)</text>
 <text xml:space="preserve" text-anchor="middle" x="300" y="-824.9" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#1f2933">opens one terminal per agent</text>
-<text xml:space="preserve" text-anchor="middle" x="300" y="-809.3" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#1f2933">and gives each a ROL:</text>
+<text xml:space="preserve" text-anchor="middle" x="300" y="-809.3" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#1f2933">and gives each a ROLE:</text>
 </g>
 <!-- a1 -->
 <g id="node3" class="node">

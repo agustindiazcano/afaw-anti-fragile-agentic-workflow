@@ -25,7 +25,7 @@ AFAW is a methodological framework and a repository-level boilerplate for govern
    - 6.5 Mutation testing on the diff
    - 6.6 Human in the loop
    - 6.7 Roles
-7. **[The Life of a Task](#the-life-of-a-task)**: 12-step lifecycle from `ROL:` consultation to merge and branch deletion.
+7. **[The Life of a Task](#the-life-of-a-task)**: 12-step lifecycle from `ROLE:` consultation to merge and branch deletion.
 8. **[Directory Structure](#directory-structure)**: Repository layout, agent skills, state definitions, tooling.
 9. **[Getting Started](#getting-started)**: One-time setup for a new repository.
 10. **[Daily Workflow](#daily-workflow)**: How to work with the agents once set up.
@@ -117,7 +117,7 @@ No commits or pushes to `main`, no merges without an explicit human directive, a
 
 ### 7. Roles
 
-At session start the agent asks for its `ROL:` and reads that role's `LASTCONTEXT` (or the global one if none exists).
+At session start the agent asks for its `ROLE:` and reads that role's `LASTCONTEXT` (or the global one if none exists).
 
 ---
 
@@ -201,13 +201,13 @@ When you create a new repository from this template, GitHub does **not** copy br
 3. **Set secrets**: copy `.env.example` to `.env` and set your credentials. Add the required secrets to your GitHub repository settings.
 4. **Enforce branch protection**: run `bash scripts/setup_protection.sh` (requires `gh` CLI logged in) to require the CI checks (`lint`, `typecheck`, `tests`, `task-delta`) and block direct pushes to `main`.
 5. **Verify CI**: open a test pull request to confirm the automated checks run and pass.
-6. **Start working**: open a terminal, invoke your agent, and answer the initial `ROL:` prompt.
+6. **Start working**: open a terminal, invoke your agent, and answer the initial `ROLE:` prompt.
 
 ---
 
 ## Daily Workflow
 
-1. Open one isolated terminal per agent. Start the agent and answer its first question with a `ROL:`.
+1. Open one isolated terminal per agent. Start the agent and answer its first question with a `ROLE:`.
 2. The agent creates its branch, works task by task with TDD, pushes, and reads the CI result.
 3. It writes its delta and task file, and asks before opening a PR.
 4. You review and approve. CI regenerates the shared state through its own PR.

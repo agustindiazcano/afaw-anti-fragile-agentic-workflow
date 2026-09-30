@@ -165,7 +165,7 @@ Figure~\ref{fig:overview} shows the whole flow. The human opens one isolated ter
 
 \subsection{Roles and session start}
 
-In its first message, the agent asks the human for its role (\code{ROL:}). It then reads the roadmap file (\code{PENDING.md}) and the last-context file of that role, or the global last-context file if the role has none. Before touching any file it runs \code{git status} and \code{git branch}, because other agents are working in the same repository. It never works on the branch that happens to be checked out: it creates a new, isolated branch first.
+In its first message, the agent asks the human for its role (\code{ROLE:}). It then reads the roadmap file (\code{PENDING.md}) and the last-context file of that role, or the global last-context file if the role has none. Before touching any file it runs \code{git status} and \code{git branch}, because other agents are working in the same repository. It never works on the branch that happens to be checked out: it creates a new, isolated branch first.
 
 \subsection{Task isolation and the life of a task}
 

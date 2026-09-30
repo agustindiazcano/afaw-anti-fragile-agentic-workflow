@@ -3,7 +3,7 @@ digraph task_lifecycle {
   node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=13, color="#1c64f2", fillcolor="#e1effe", fontcolor="#1f2933", penwidth=1.2, margin="0.25,0.12"];
   edge  [fontname="Helvetica", fontsize=11, color="#52606d", fontcolor="#3e4c59", arrowsize=0.8, penwidth=1.1];
 
-  s1  [label="1. Ask the human for ROL:"];
+  s1  [label="1. Ask the human for ROLE:"];
   s2  [label="2. Read PENDING.md and the role's LASTCONTEXT\n(global LASTCONTEXT if the role has none)"];
   s3  [label="3. Step 0: git status and git branch\nOther agents are working in this repo"];
   s4  [label="4. Create a new isolated branch named after the task\nfeat/, fix/ or chore/ + clear description"];
