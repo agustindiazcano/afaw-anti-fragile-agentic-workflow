@@ -7,13 +7,13 @@ digraph control_layers {
   act [label="An agent tries to do something\ncommit, push, merge, change state"];
 
   node [fillcolor="#fef3c7", color="#b45309"];
-  l1  [label="Layer 1: AGENTS.md and CLAUDE.md\nAdvice. The agent can ignore or misread it.\nStep 0, never push to main, ask before the PR"];
+  l1  [label="Layer 1: AGENTS.md (CLAUDE.md imports it)\nAdvice. The agent can ignore or misread it.\nStep 0, never push to main, ask before the PR"];
 
   node [fillcolor="#ede9fe", color="#6d28d9"];
-  l2  [label="Layer 2: hooks\nIntercept commands before they run\ne.g. the PENDING.md file can never be deleted or emptied"];
+  l2  [label="Layer 2: hooks\nIntercept commands before they run: no push to main,\nPENDING.md never emptied, no writes to build/ or equivalent mutants"];
 
   node [fillcolor="#dcfce7", color="#15803d"];
-  l3  [label="Layer 3: CI checks\nTests, lint, types, mutation, task delta\nA failing check blocks the PR"];
+  l3  [label="Layer 3: CI checks\nTests, lint, types, red-first, mutation,\ntask files, delta, docs, paper PDF\nA failing check blocks the PR"];
 
   node [fillcolor="#fee2e2", color="#b91c1c"];
   l4  [label="Layer 4: GitHub branch protection\nThe server rejects a direct push to main"];

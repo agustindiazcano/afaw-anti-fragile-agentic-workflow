@@ -4,7 +4,7 @@
 
 Several coding agents working on one repository fail in predictable ways: they collide on branches and on shared context files, claim results they never measured, and write tests that pass whatever the code does. AFAW is a repository-level method and boilerplate that lets agents write code in parallel while deterministic tools decide whether the result is acceptable and a human approves every merge.
 
-*The reference implementation targets a Python backend; the stack-specific rules are meant to be adapted.*
+*AFAW is the method; the code here is one way to implement it. See [what is core and what you can replace](#method-and-this-implementation).*
 
 **White paper (PDF): [`docs/paper/afaw.pdf`](docs/paper/afaw.pdf)** · LaTeX source: [`docs/paper/afaw.tex`](docs/paper/afaw.tex) · DOI [10.5281/zenodo.23050310](https://doi.org/10.5281/zenodo.23050310)
 
@@ -29,22 +29,46 @@ A dashboard built by `scripts/build_state.py` from mock data: a fictional projec
 
 Build it locally: `python -m examples.mock_dashboard mock-output` and open `mock-output/index.html`.
 
+## Why use it
+
+- **It costs less.** Without it, an agent runs the whole test suite on your machine, the machine is slow, tests fail for reasons that have nothing to do with the code, and the agent retries for an hour. Every retry sends its whole context again: that is where the token bill goes. With AFAW the agent runs only the test it is writing; the cloud runs the rest in parallel and answers once. A few minutes of CI cost far less than an hour of an agent going in circles.
+- **It works alone and in a team.** Alone, you let the agents run and nobody checks them: they commit to the wrong branch, write tests that pass no matter what, and report results they never measured. The checks, the branch protection and the hooks do that reviewing for you.
+- **With 2 or 10 people, everyone sees what the agents did.** Each person runs their own agents, and without a shared record nobody knows what the others' agents changed, why, or where each task stands. Here every task, decision and status is in the same place and in the same format, for every person and every agent: the board, the generated `LASTCONTEXT.md` and the decision records. You set it up once, from the template.
+- **The project documents itself.** Every task leaves what was done, what is left and, for each decision, why it was taken. When agents do the work, that is usually lost: afterwards nobody knows what was done or why.
+- **A new agent understands the project in minutes.** Instead of reading every file from scratch, it reads one generated index (`LASTCONTEXT.md`) and follows links to the decisions it needs. Less reading means fewer tokens and less time, and the saving grows with the project.
+
+These are the expected gains, not measured ones yet. The dashboard already records timings and CI cost, and the paper's evaluation protocol says how to measure all four.
+
+## Method and this implementation
+
+The method does not require these exact tools. Write your tests however you like, use any CI, skip mutation testing outside critical code. Some parts, though, are what make it work: remove them and the problem they solve comes back.
+
+| Core: remove it and the problem returns | Replaceable: same idea, another tool | Optional |
+|---|---|---|
+| Each task writes its own state files; shared views are derived. (One shared context file breaks as soon as two agents work at once.) | The CI system, the test framework | The dashboard and its charts |
+| Measured values, never written by the agent | The mutation engine | Mutation testing outside critical code |
+| Heavy checks in the cloud, not on the agent's machine | Hooks, for another agent or tool | Timings and CI cost |
+| One branch per task, no push to `main`, a human approves | The format of decision records | Per-role context files |
+| The red step checked by a tool, not reported by the agent | The language of the rules file | |
+
 ---
 
 ## Index
 
 1. [Demo dashboard](#demo-dashboard)
-2. [Core principle](#core-principle-the-ai-decides-the-engine-measures)
-3. [Failure modes and mechanisms](#failure-modes-and-mechanisms)
-4. [System overview](#system-overview)
-5. [How it works](#how-it-works)
-6. [The life of a task](#the-life-of-a-task)
-7. [Directory structure](#directory-structure)
-8. [Getting started](#getting-started)
-9. [Daily workflow](#daily-workflow)
-10. [Scope and limits](#scope-and-limits)
-11. [Rebuilding the diagrams and the paper](#rebuilding-the-diagrams-and-the-paper)
-12. [Citation, author, license](#citation)
+2. [Why use it](#why-use-it)
+3. [Method and this implementation](#method-and-this-implementation)
+4. [Core principle](#core-principle-the-ai-decides-the-engine-measures)
+5. [Failure modes and mechanisms](#failure-modes-and-mechanisms)
+6. [System overview](#system-overview)
+7. [How it works](#how-it-works)
+8. [The life of a task](#the-life-of-a-task)
+9. [Directory structure](#directory-structure)
+10. [Getting started](#getting-started)
+11. [Daily workflow](#daily-workflow)
+12. [Scope and limits](#scope-and-limits)
+13. [Rebuilding the diagrams and the paper](#rebuilding-the-diagrams-and-the-paper)
+14. [Citation, author, license](#citation)
 
 ---
 
@@ -188,6 +212,7 @@ GitHub does not copy branch protection, required checks or Pages settings to a r
 - Mutation score measures how sensitive the tests are to changes, not whether the code meets its requirements.
 - The red-first check shows that a new test fails on the old code, not that it fails for the right reason.
 - Checks verify the ADRs that exist; a decision that was never recorded is left to the reviewer.
+- Documentation that stops being true misleads more than none. Derived views are rebuilt and decisions can be superseded, but nothing detects a decision record whose text went stale while nobody replaced it.
 
 ## Rebuilding the diagrams and the paper
 

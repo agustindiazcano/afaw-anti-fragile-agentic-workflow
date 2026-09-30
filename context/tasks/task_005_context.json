@@ -1,0 +1,8 @@
+{
+  "task_id": "task_005",
+  "files_touched": [],
+  "summary": "Paper and README now state, in plain language, why the method pays off (cheaper than agents looping locally, works alone and makes agents' work visible to a team, documents itself, faster onboarding of new agents) and what is core, replaceable or optional. RQ5 and an onboarding metric added; stale knowledge added as a limitation; the conclusion separates design from validation. Figure 6 updated; PDF rebuilt.",
+  "next": [
+    "Run the evaluation protocol on real tasks: tokens and CI minutes per task (RQ3), onboarding cost (RQ5)"
+  ]
+}

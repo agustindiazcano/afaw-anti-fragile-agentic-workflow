@@ -105,6 +105,7 @@ The paper's contributions are limited and explicit:
 \begin{enumerate}
   \item A catalogue of seven failure modes observed while working with several agents on one repository (Section~\ref{sec:failures}).
   \item The method itself: a set of rules, state files and checks (Section~\ref{sec:method}), whose full rule set is given in Appendix~\ref{app:rules}.
+  \item A separation between what the method requires and what its reference implementation chooses, and the expected gains stated as measurable hypotheses (Sections~\ref{sec:core} and~\ref{sec:value}).
   \item A mapping from each failure mode to the mechanism that addresses it and to the risk that remains (Section~\ref{sec:map}).
   \item An evaluation protocol that would let others test the method against a baseline (Section~\ref{sec:eval}).
 \end{enumerate}
@@ -333,6 +334,43 @@ When the product itself contains LLM agents (F7), AFAW adds rules that follow th
 
 Most rules are stack-independent. The rules on code standards, architecture, concurrency and messaging, debugging, and infrastructure (Appendix~\ref{app:rules}, sections 4--10 and 14--16) assume a Python backend with asynchronous I/O, a relational database, a message broker, Terraform and the Model Context Protocol. For other stacks they should be adapted or removed.
 
+\subsection{Method and reference implementation}
+\label{sec:core}
+
+AFAW is the method; the code in the repository is one way to implement it. Tests can be written in any framework, mutation testing can use any engine or be left out outside critical modules, and CI can be any system that runs checks outside the agent's machine. Some parts cannot be removed without bringing a failure mode back. If per-task state files are replaced by one shared context file, agents working at the same time overwrite each other again (F2). Table~\ref{tab:core} separates the three kinds of part.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Core: removing it brings a failure mode back} & \textbf{Replaceable: same intent, another tool} & \textbf{Optional}\\
+\midrule
+State written per task, never shared; shared views derived (F2) & The CI system and the test framework & The dashboard and its charts\\
+Measured values, never declared by the agent (F3) & The mutation engine & Mutation testing outside critical modules\\
+Heavy checks outside the agent's machine (F5) & Hooks, for another agent or tool & Timings and CI cost\\
+One branch per task; no push to \code{main}; human sign-off (F1, F6) & The format of decision records & The per-role last-context files\\
+A red step verified by a tool, not reported by the agent (F4) & The language of the rules file & \\
+\bottomrule
+\end{tabularx}
+\caption{What the method requires and what the reference implementation chooses.}
+\label{tab:core}
+\end{table}
+
+% =====================================================================
+\section{Why it pays off}
+\label{sec:value}
+
+The mechanisms have a cost: a one-time setup, and per task a task file, a delta and sometimes a decision record. This section states, in plain terms, what the method is expected to give back. Each item is a hypothesis with a metric in Section~\ref{sec:eval}.
+
+\begin{description}[leftmargin=0pt, labelindent=0pt, itemsep=4pt]
+  \item[It is cheaper to run.] An agent that runs the full test suite on a slow machine sees failures caused by the machine, not by the code, and retries. Every retry sends its whole context again, and the loop can last an hour. With two tiers, the agent runs only the test it is writing, and CI runs the rest in parallel on clean machines and returns one verdict. A minute of CI costs much less than an hour of an agent looping, so the method is expected to cost less than it adds (RQ3).
+  \item[It works for one person.] A single developer who leaves agents running has no reviewer. The checks, the branch protection and the hooks do the reviewing that nobody else is there to do. Small projects are where agents are most often left alone, and where these guards are most needed.
+  \item[It makes agents' work visible to a team.] With two or ten developers, each running their own agents, the problem becomes knowing what the others' agents changed, why, and where each task stands. Every task, decision and status is recorded in the same place and the same format, whoever or whatever did the work, and the board and the last-context file show it to everyone. The setup is done once, from the template.
+  \item[It documents the project as it goes.] Every task leaves a summary, the next steps and, for each decision, a record of why it was taken. Without this, when agents do the work, nobody knows afterwards what was done or why. The generated last-context file is an index to that record.
+  \item[A new agent understands the project faster.] An agent that starts from nothing has to read the whole repository to work out what was decided and why. With the index, it reads one file and follows links to the decisions it needs. That is less context, fewer tokens and less time, and the saving grows with the project (RQ5).
+\end{description}
+
 % =====================================================================
 \section{From failure mode to mechanism}
 \label{sec:map}
@@ -378,6 +416,7 @@ F7 & Unconstrained side effects & Deterministic execution layer, strict revalida
   \item \textbf{Visibility of unmerged work.} Views built from \code{origin/main} hide tasks in flight. How often this leads to duplicated or conflicting work has not been measured.
   \item \textbf{Human review remains necessary.} The method reduces how much code a person must read, but intent, design, security and the tests themselves still need human judgement.
   \item \textbf{Stack specificity.} Part of the rule set assumes a Python backend (Section~\ref{sec:method}).
+  \item \textbf{Stale knowledge.} Documentation that is no longer true misleads more than no documentation. The derived views cannot go stale, because they are rebuilt, and a decision record can be superseded. Nothing detects a record whose text stopped being true while nobody replaced it; that is left to the human and to the knowledge budget.
   \item \textbf{Model drift.} Agent behavior depends on the model and tool version. Any measurement should record both and the date.
   \item \textbf{On the name.} ``Anti-fragile'' follows Taleb's term for systems that gain from disorder \cite{taleb2012}. Here it is used informally: failures caught by deterministic checks are turned into stronger tests and rules. This paper does not show that the method gains from stress in Taleb's formal sense.
 \end{itemize}
@@ -394,6 +433,7 @@ The claim that AFAW helps should be tested, not assumed. This section proposes a
   \item[RQ2] Do the red-first check and the mutation gate reduce escaped defects and vacuous tests?
   \item[RQ3] What does the method cost in elapsed time, tokens, CI runs, CI queue time and CI minutes?
   \item[RQ4] How much human review effort does each pull request need, and what does the reviewer find?
+  \item[RQ5] How much faster, and at what token cost, does a new agent answer questions about the project when it starts from the generated last-context file and the decision records, compared with reading the repository from nothing?
 \end{description}
 
 \textbf{Design.} Run the same task set under matched conditions: (A) a baseline with minimal agent instructions; (B) full AFAW; and ablations of B that remove one component at a time (state isolation, the red-first check, the mutation gate, two-tier execution). Fix and record the model, the tool version and the date. Randomize the order of tasks and repeat runs, because agent output is not deterministic. Tasks can come from the project's own backlog. Public issue-resolution benchmarks with hidden tests, such as SWE-bench \cite{jimenez2024}, can supply an independent ground truth that the agents' own tests cannot.
@@ -421,6 +461,7 @@ Mutation score and coverage & Reported separately for merged files; gated score,
 Red-first failures & Added tests that passed on the old code & CI logs\\
 Human review minutes per PR & Time a reviewer actively spends before approving (effort, unlike review latency) & Reviewer log\\
 Rule violations & Times an agent broke a rule, and by which mechanism it was caught & Hook, CI and protection logs\\
+Onboarding cost & Tokens, time and correct answers for a fresh agent on a fixed set of questions about the project, with and without the knowledge files & Agent usage logs, answer key\\
 \bottomrule
 \end{tabularx}
 \caption{Proposed metrics.}
@@ -439,7 +480,7 @@ This paper does not survey the fast-moving literature on coding agents. Related 
 % =====================================================================
 \section{Conclusion}
 
-AFAW is a set of rules, state files and checks for working with several coding agents on one repository. Its central choice is to let models generate and let deterministic tools verify, with a human approving every merge. It targets seven observed failure modes and states the risk that remains for each. It is a hypothesis about how to work, not a demonstrated result. The protocol in Section~\ref{sec:eval} is offered so that the hypothesis can be tested, and refuted if the data say so.
+AFAW is a set of rules, state files and checks for working with several coding agents on one repository. Its central choice is to let models generate and let deterministic tools verify, with a human approving every merge. It targets seven observed failure modes and states the risk that remains for each. Its design can be judged now: what it requires, what it enforces and what it leaves unsolved are stated. Its benefits cannot yet: it is a hypothesis about how to work, not a demonstrated result. The expected gains (Section~\ref{sec:value}) are specific and measurable, and the reference implementation already records the timings and CI costs they need. The protocol in Section~\ref{sec:eval} is offered so that the hypothesis can be tested, and refuted if the data say so.
 
 % =====================================================================
 \section*{Declarations}
