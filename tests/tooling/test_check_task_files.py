@@ -116,3 +116,11 @@ def test_new_task_id_must_not_exist_on_the_target_branch():
     assert errors == [
         f"{P1}: task id task_001 already exists on origin/main; pick the next free id"
     ]
+
+
+def test_v1_0_task_file_migrates_without_reopening():
+    # v1.0 used status "completed" and a free-text owner; the migrated file is the same task.
+    old = {"id": "task_001", "status": "completed", "owner": "antigravity", "locked_files": []}
+    new = make_task(status="done", branch="chore/fix-role-typo", type="chore")
+    run, read = fake(f"M\t{P1}\n", {P1: old}, {P1: new})
+    assert check("base", "feat/migration", run, read) == []

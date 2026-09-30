@@ -30,6 +30,10 @@ from scripts.afaw_state.model import check_transition, validate_task
 from scripts.afaw_state.source import Runner, git_runner
 
 PREFIX = "state/tasks/"
+# v1.0 task files used other statuses and a free-text owner. Read on the base side only, so a
+# migrated file is compared as the same task rather than as a reopened or reassigned one.
+LEGACY_STATUSES = {"completed": "done", "blocked": "pending"}
+OWNERS = ("agent", "human")
 
 
 def _previous(run: Runner, base: str, path: str) -> tuple[str | None, str | None]:
@@ -40,7 +44,9 @@ def _previous(run: Runner, base: str, path: str) -> tuple[str | None, str | None
         return None, None
     if not isinstance(old, dict):
         return None, None
-    return old.get("status"), old.get("owner", "agent")
+    status = old.get("status")
+    owner = old.get("owner", "agent")
+    return LEGACY_STATUSES.get(status, status), owner if owner in OWNERS else None
 
 
 def _exists_on(run: Runner, ref: str, path: str) -> bool:
