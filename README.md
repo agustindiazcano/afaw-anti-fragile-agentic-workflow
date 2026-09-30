@@ -134,4 +134,15 @@ Measures fragility by mutating modified code with AST to guarantee test suite co
 ### 5. Control Layers
 Defense in depth from prompt instructions down to branch protection rules:
 
+## Author
+
+Agustin Diaz-Cano, MS Candidate, Information Systems Engineering (UTN)
+
+## License
+
+MIT (or Apache-2.0 if you want an explicit patent grant).
+
 ![Control Layers](docs/img/06-control-layers.svg)
+
+**Official DOI:** [10.5281/zenodo.23050310]
+
