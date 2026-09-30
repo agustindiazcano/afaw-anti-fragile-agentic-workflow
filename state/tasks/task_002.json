@@ -1,0 +1,12 @@
+{
+  "id": "task_002",
+  "title": "Commit the compiled paper PDF and link it from the README",
+  "role": "maintainer",
+  "type": "chore",
+  "status": "done",
+  "owner": "agent",
+  "branch": "docs/commit-paper-pdf",
+  "priority": 2,
+  "difficulty": 1,
+  "blocked_by": []
+}

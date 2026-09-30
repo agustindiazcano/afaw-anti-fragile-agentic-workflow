@@ -6,7 +6,7 @@ Several coding agents working on one repository fail in predictable ways: they c
 
 *The reference implementation targets a Python backend; the stack-specific rules are meant to be adapted.*
 
-White paper: [`docs/paper/afaw.tex`](docs/paper/afaw.tex) · DOI [10.5281/zenodo.23050310](https://doi.org/10.5281/zenodo.23050310)
+**White paper (PDF): [`docs/paper/afaw.pdf`](docs/paper/afaw.pdf)** · LaTeX source: [`docs/paper/afaw.tex`](docs/paper/afaw.tex) · DOI [10.5281/zenodo.23050310](https://doi.org/10.5281/zenodo.23050310)
 
 ---
 
@@ -119,7 +119,7 @@ A static HTML page (no scripts) with progress, tasks by status, tasks merged per
 │   ├── gotchas/                   # Operational traps, closed as resolved or promoted
 │   ├── templates/                 # ADR and gotcha templates
 │   ├── diagrams/ and img/         # Graphviz sources and rendered figures
-│   └── paper/                     # The white paper (appendix generated from AGENTS.md)
+│   └── paper/                     # The white paper: afaw.pdf and its source afaw.tex
 ├── scripts/
 │   ├── afaw_state/                # Model, facts, lights, durations, views, dashboard
 │   ├── build_state.py             # Derived views from a git ref
@@ -172,7 +172,7 @@ GitHub does not copy branch protection, required checks or Pages settings to a r
 for f in docs/diagrams/*.dot; do n=$(basename "$f" .dot); dot -Tsvg "$f" -o "docs/img/$n.svg"; dot -Tpng -Gdpi=200 "$f" -o "docs/img/$n.png"; done
 ```
 
-The paper: see [`docs/paper/README.md`](docs/paper/README.md).
+The paper: see [`docs/paper/README.md`](docs/paper/README.md). A pull request that changes `afaw.tex`, `AGENTS.md` or `docs/img/` must also commit the rebuilt `docs/paper/afaw.pdf`; CI checks it.
 
 ## Citation
 
