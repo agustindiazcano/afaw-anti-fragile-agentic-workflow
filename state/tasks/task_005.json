@@ -1,0 +1,12 @@
+{
+  "id": "task_005",
+  "title": "State why the method pays off and what is core versus replaceable, in the paper and README",
+  "role": "maintainer",
+  "type": "chore",
+  "status": "done",
+  "owner": "agent",
+  "branch": "docs/value-and-scope",
+  "priority": 1,
+  "difficulty": 2,
+  "blocked_by": []
+}
