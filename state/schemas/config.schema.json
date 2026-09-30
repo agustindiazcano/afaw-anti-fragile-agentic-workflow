@@ -4,6 +4,10 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "_comment": {
+      "type": "string",
+      "description": "Optional comment string for documentation."
+    },
     "code_prefixes": {
       "type": "array",
       "description": "Folders (with trailing slash) whose changes count as code and require a context delta.",

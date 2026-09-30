@@ -1,0 +1,436 @@
+\PassOptionsToPackage{obeyspaces,spaces}{url}
+\PassOptionsToPackage{hidelinks}{hyperref}
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Fonts: Arial (metric-compatible Liberation Sans if Arial is not installed). Compile with XeLaTeX. ----------
+\usepackage{fontspec}
+% Liberation Sans is metrically identical to Arial. To use Arial itself, replace the three names below by
+% Arial, Arial and Courier New (the fonts must be installed on the machine that compiles the file).
+\setmainfont{Liberation Sans}
+\setsansfont{Liberation Sans}
+\setmonofont[Scale=MatchLowercase]{Liberation Mono}
+\usepackage{microtype}
+
+% ---------- Layout ----------
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{longtable}
+\usepackage{titlesec}
+\usepackage{url}
+\urlstyle{tt}
+
+
+\usepackage{hyperref}
+\hypersetup{
+  pdftitle={Anti-Fragile Agentic Workflow (AFAW): A Deterministic, Multi-Agent Methodology for AI-Assisted Software Development},
+  pdfauthor={Agustin Diaz-Cano},
+  pdfsubject={Software engineering methodology for AI-assisted development with multiple coding agents},
+  pdfkeywords={AI-assisted development, coding agents, multi-agent, continuous integration, mutation testing, test-driven development, large language models}
+}
+
+% ---------- Macros ----------
+\newcommand{\code}[1]{\path{#1}}
+\newcommand{\afaw}{AFAW}
+\setlist{itemsep=2pt, topsep=4pt, parsep=0pt}
+\captionsetup{font=small, labelfont={bf,sf}, labelsep=period}
+\renewcommand{\arraystretch}{1.18}
+
+\titleformat{\section}{\sffamily\Large\bfseries}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\sffamily\large\bfseries}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\sffamily\normalsize\bfseries}{\thesubsubsection}{0.7em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily AFAW: Anti-Fragile Agentic Workflow}
+\fancyhead[R]{\small\sffamily A. Diaz-Cano}
+\fancyfoot[C]{\small\sffamily\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\setlength{\headheight}{14pt}
+
+\setlength{\parskip}{4pt}
+\setlength{\emergencystretch}{3em}
+\setlength{\parindent}{0pt}
+
+% Float placement: allow large figures to take a page of their own without blocking the queue
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.6}
+\setcounter{topnumber}{2}
+\setcounter{totalnumber}{4}
+
+\begin{document}
+
+% ---------- Title block ----------
+\begin{center}
+  {\sffamily\bfseries\huge Anti-Fragile Agentic Workflow (AFAW)\par}
+  \vspace{0.5em}
+  {\sffamily\Large A deterministic, multi-agent methodology\\ for AI-assisted software development\par}
+  \vspace{1.2em}
+  {\large Agustin Diaz-Cano\par}
+  \vspace{0.3em}
+  {\small MS Candidate, Information Systems Engineering,\\ National Technological University (UTN), Argentina\\[4pt]
+  \href{https://orcid.org/0009-0001-4336-490X}{ORCID: 0009-0001-4336-490X}\\[2pt]
+  \href{mailto:adiazcano@frba.utn.edu.ar}{\texttt{adiazcano@frba.utn.edu.ar}}\par}
+  \vspace{0.6em}
+  {\small\sffamily White paper \textbullet\ Version 1.0 \textbullet\ September 29, 2026\par}
+\end{center}
+
+\vspace{0.4em}
+\begin{abstract}
+\noindent Coding agents based on large language models can produce code faster than a person can review it. Running several of them on one repository adds failure modes that a single-agent workflow does not have: agents working on the wrong branch, collisions on shared context files, claims of results that were never measured, and tests that pass whatever the code does. This paper describes the Anti-Fragile Agentic Workflow (AFAW), a repository-level methodology and boilerplate for AI-assisted development with several agents in parallel. AFAW rests on one division of labour: \emph{the AI decides, the engine measures}. Agents generate code; deterministic tools (tests, type checkers, mutation testing, continuous integration) decide whether it is acceptable; a human approves every merge. The method combines per-task branch isolation, task-scoped state files merged by continuous integration, strict test-driven development, validation in parallel cloud jobs, mutation testing restricted to modified files, and enforcement layers that do not depend on the prompt. The reference implementation targets a Python backend; the stack-specific rules are meant to be adapted to other stacks. The rules were derived from failures the author observed in practice. This paper states the method, maps each failure mode to a mechanism and to its residual risk, lists the limitations, and proposes an evaluation protocol. It reports no performance measurements: whether the method improves outcomes remains to be measured.
+
+\medskip
+\noindent\textbf{Keywords:} AI-assisted development; coding agents; multi-agent workflows; continuous integration; mutation testing; test-driven development; large language models.
+\end{abstract}
+
+% =====================================================================
+\section{Introduction}
+
+Coding agents such as Claude Code, Gemini-based tools and Cursor can read a repository, edit files, run commands and open pull requests. A developer can start several of them at once, each in its own terminal. The bottleneck then moves from writing code to keeping the work coherent and verifying it: who is working where, which state is current, and whether the code does what the agent says it does.
+
+Advice for working with coding agents is mostly given as tips for prompting one agent. This paper addresses a different question: what repository-level rules, files and checks keep \emph{several} agents from interfering with each other and make their output verifiable by tools that do not share the model's blind spots?
+
+The paper's contributions are limited and explicit:
+\begin{enumerate}
+  \item A catalogue of seven failure modes observed while working with several agents on one repository (Section~\ref{sec:failures}).
+  \item The method itself: a set of rules, state files and checks (Section~\ref{sec:method}), whose full rule set is given in Appendix~\ref{app:rules}.
+  \item A mapping from each failure mode to the mechanism that addresses it and to the risk that remains (Section~\ref{sec:map}).
+  \item An evaluation protocol that would let others test the method against a baseline (Section~\ref{sec:eval}).
+\end{enumerate}
+
+The reference implementation targets a Python backend, and part of the rule set names Python tools. The method itself does not depend on the language: the stack-specific rules are meant to be re-written for another stack (Section~\ref{sec:stacks}, and the stack note in Appendix~\ref{app:rules}).
+
+AFAW is a practitioner methodology. It was distilled from the author's experience and has not been validated in a controlled study. No claim about speed, cost or defect rates is made here.
+
+% =====================================================================
+\section{Failure modes observed}
+\label{sec:failures}
+
+The failure modes in Table~\ref{tab:failures} were observed by the author while working with coding agents. They were not logged systematically, so their frequency is unknown, and the list reflects one person's experience.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{ID} & \textbf{Failure mode} & \textbf{What it looks like in practice}\\
+\midrule
+F1 & Wrong-branch work & An agent starts editing files on whatever branch is checked out and collides with work that other agents are doing.\\
+F2 & Shared-state conflicts & Two agents update the same shared context file (a last-context or pending-tasks file) and produce merge conflicts.\\
+F3 & Unmeasured claims & An agent reports a result (coverage, a passing suite, a speed-up) that it never measured.\\
+F4 & Vacuous tests & Tests pass regardless of the behavior of the code they are meant to check.\\
+F5 & Heavy local runs & Full test suites launched on the developer's machine block the workflow.\\
+F6 & Unreviewed integration & Nothing prevents a direct push to the main branch or a merge without human approval.\\
+F7 & Unconstrained side effects & In systems that embed an LLM, a model output triggers a write with side effects without independent validation.\\
+\bottomrule
+\end{tabularx}
+\caption{Failure modes addressed by AFAW.}
+\label{tab:failures}
+\end{table}
+
+% =====================================================================
+\section{Design principles}
+\label{sec:principles}
+
+\begin{description}[leftmargin=0pt, labelindent=0pt, itemsep=4pt]
+  \item[P1. The AI decides, the engine measures.] Every number (coverage, metrics, risk) comes from a deterministic function, never from an estimate, a rounding or an extrapolation by the model. The model proposes; tools measure.
+  \item[P2. Determinism.] The same input yields the same numbers. Two identical runs that differ are treated as a bug.
+  \item[P3. Parsimony.] Use the simplest mechanism that solves the observed problem, and add a heavier one only with evidence that the simple one fails. Do not introduce opaque components (for example a trained classifier) that then have to be monitored.
+  \item[P4. Human authority.] Agents propose and structure changes. A human approves every pull request and decides every merge.
+  \item[P5. State as code.] Project state and agent context are versioned files in the repository, so they are diffable, reviewable and reproducible.
+  \item[P6. Fail loudly, do not fabricate.] If a check cannot run, it returns a real error, never an empty result that looks like a pass.
+  \item[P7. Advice is not a guarantee.] Instructions in a prompt can be ignored or misread. Rules that matter are also enforced by mechanisms outside the model.
+\end{description}
+
+% =====================================================================
+\section{The method}
+\label{sec:method}
+
+Figure~\ref{fig:overview} shows the whole flow. The human opens one isolated terminal per agent and gives each a role. Each agent works on its own branch, follows test-driven development, and pushes. Continuous integration (CI) validates in the cloud. The human approves the pull request, and CI regenerates the shared state through a second pull request that the human also approves.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.8\textwidth,height=0.66\textheight,keepaspectratio]{figures/01-overview.png}
+\caption{Overview of AFAW. The three agents are isolated, one terminal each. White: agent action; grey: human; lightest grey: CI or deterministic check; medium grey: state files; darkest grey: blocked.}
+\label{fig:overview}
+\end{figure}
+
+\subsection{Roles and session start}
+
+In its first message, the agent asks the human for its role (\code{ROL:}). It then reads the roadmap file (\code{PENDING.md}) and the last-context file of that role, or the global last-context file if the role has none. Before touching any file it runs \code{git status} and \code{git branch}, because other agents are working in the same repository. It never works on the branch that happens to be checked out: it creates a new, isolated branch first.
+
+\subsection{Task isolation and the life of a task}
+
+Each task gets its own branch, named after the task with a prefix (\code{feat/}, \code{fix/} or \code{chore/}) and a clear description. Work is committed in atomic units: one feature, one commit, in the Conventional Commits format \cite{conventionalcommits}. The agent never commits or pushes to \code{main}. Figure~\ref{fig:lifecycle} gives the twelve steps from the first question to the deletion of the branch.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.64\textwidth,height=0.86\textheight,keepaspectratio]{figures/02-task-lifecycle.png}
+\caption{The life of a task, from asking for a role to deleting the branch after the merge.}
+\label{fig:lifecycle}
+\end{figure}
+
+At the end of a task the agent updates the affected documentation and its own task files, and records them in a separate documentation commit that contains documents only. The agent then asks whether to create the pull request, unless the human has already asked for it. The pull request carries a title, a description and the link to the CI run. The human approves it manually, and merging requires an explicit human directive.
+
+\subsection{Isolated state and context}
+\label{sec:state}
+
+Agents never edit shared state files. Each agent writes only two files: its delta (\code{context/tasks/task_NNN_context.json}) and its task file (\code{state/tasks/task_NNN.json}). Three kinds of shared file are generated and never edited by hand:
+\begin{itemize}
+  \item \code{state/pending.json}
+  \item \code{context/global/lastcontext.json}
+  \item \code{context/roles/*/lastcontext.json}
+\end{itemize}
+After a merge, a CI script (\code{scripts/merge_state.py}) regenerates them and opens a pull request that the human approves.
+
+A second CI script (\code{scripts/check_task_delta.py}) rejects a pull request that changes code without a valid delta listing those files in a \code{files_touched} field. Which folders count as code is set per project in \code{state/config.json}. Figure~\ref{fig:state} shows the flow. Serializing the regeneration runs (for example with a CI concurrency group) prevents the bot pull requests from racing each other; how well this scales with many agents has not been measured.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.5\textwidth,height=0.84\textheight,keepaspectratio]{figures/03-state-and-context.png}
+\caption{State and context. The agent writes only its own delta and task file; CI checks the delta, regenerates the shared files and opens a state pull request.}
+\label{fig:state}
+\end{figure}
+
+A status report reads only \code{state/pending.json} from \code{origin/main}, because the copy on a working branch may be stale. It is returned as a table with one row per task, a traffic-light status, a difficulty from 1 to 5 and a priority from 1 to 5.
+
+\subsection{Verification in CI}
+\label{sec:ci}
+
+Development is test-driven in the strict sense: the agent writes a test, confirms that it fails, writes the minimum code that makes it pass, and refactors with the test green. For a bug, the first step is a test that reproduces it and fails. When the task is to add tests to existing code, only the test folder is edited. If a new test fails against the original code, the test is presumed wrong unless there is evidence of a real defect, in which case it is marked as an expected failure with the reason recorded, and the source is not changed to make it pass.
+
+Tests, linters, type checks, mutation testing and builds are launched in CI, not on the developer's machine. Independent jobs run in parallel, and path filters make each job run only when its own files change: back-end changes launch back-end jobs, front-end changes launch front-end jobs, and document-only changes launch nothing. Linters run only on the modified files. Load and chaos tests run as manual or scheduled workflows, not on every pull request. Figure~\ref{fig:ci} summarizes the pipeline.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.92\textwidth,height=0.42\textheight,keepaspectratio]{figures/04-ci-pipeline.png}
+\caption{The CI pipeline. Path filters route a change to parallel jobs; load and chaos tests are separate workflows.}
+\label{fig:ci}
+\end{figure}
+
+Verification rules apply to the checks themselves. A script that reports PASS does not prove that it measured the right thing, so internal consistency (two runs agree) is combined with a known external value. Credentials and configuration are validated before minutes of compute are spent.
+
+\subsection{Mutation testing on the diff}
+\label{sec:mutation}
+
+Mutation testing \cite{demillo1978,jia2011} alters the source in small ways (mutants) and re-runs the tests. If the tests still pass, no test detected that change. The line may well be executed; no assertion depends on it. With $N$ generated mutants, $K$ killed and $E$ equivalent to the original, the mutation score is $K/(N-E)$. Coverage and mutation score measure different things and should be reported separately.
+
+AFAW applies mutation testing only to new or modified files, in parallel in CI (Figure~\ref{fig:mutation}). Before mutating, the baseline is validated: the suite must pass on unmodified code, otherwise every mutant would count as killed and a false 100\% would result. Surviving mutants are fixed by writing or improving tests, and the run is repeated. Equivalent mutants are reported rather than covered with artificial tests. The step is mandatory in critical modules (money, security, concurrency, public contracts), where a file below the minimum score blocks the pull request. The critical paths and the minimum score are defined per project in \code{state/config.json} (\code{mutation_critical_paths} and \code{mutation_min_score}).
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.94\textwidth,height=0.74\textheight,keepaspectratio]{figures/05-mutation-testing.png}
+\caption{Mutation testing on the diff, with the baseline check and the blocking rule for mandatory files.}
+\label{fig:mutation}
+\end{figure}
+
+\subsection{Human authority and enforcement layers}
+\label{sec:enforcement}
+
+The rules ``never commit or push to \code{main}'', ``never merge without an explicit human directive'' and ``the human approves every pull request'' are written in the agent instruction file. Because that file is advice (P7), they are also placed under mechanisms that do not depend on the model (Figure~\ref{fig:layers}). Hooks intercept commands before they run; one example is a hard-deny rule that lets \code{PENDING.md} be edited but never deleted or emptied. CI checks block a pull request that fails tests, lint, types, mutation or the task-delta check. Branch protection on \code{main} makes the server reject a direct push. The human approval is the last step.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.56\textwidth,height=0.55\textheight,keepaspectratio]{figures/06-control-layers.png}
+\caption{Control layers. The layers are shown in a rough order; in practice each acts at a different moment.}
+\label{fig:layers}
+\end{figure}
+
+Hooks are a best-effort filter, not a security boundary: a command can be phrased in a way a pattern misses. Branch protection is the barrier that does not depend on the agent.
+
+\subsection{A module for systems that embed an LLM}
+
+When the product itself contains LLM agents (F7), AFAW adds rules that follow the same principles. The LLM never executes tools with side effects: only deterministic code does, and every write tool is idempotent by a request identifier. LLM output is never trusted: it is revalidated on the server with strict schemas and business limits. The user-facing agent has minimum privilege, and a prompt-injection filter runs before a message reaches it. Every component is declared fail-open or fail-closed; guards and judges fail closed, while context retrieval and tracing fail open. Each tool call is authenticated and authorized on the server, and every invocation, including denied ones, is written to an audit log with personal data masked. Model judges are evaluated on the production code, and false approvals are reported first because they are the dangerous error.
+
+\subsection{Adapting to other stacks}\label{sec:stacks}
+
+Most rules are stack-independent. The rules on code standards, architecture, concurrency and messaging, debugging, and infrastructure (Appendix~\ref{app:rules}, sections 4--10 and 14--16) assume a Python backend with asynchronous I/O, a relational database, a message broker, Terraform and the Model Context Protocol. For other stacks they should be adapted or removed.
+
+% =====================================================================
+\section{From failure mode to mechanism}
+\label{sec:map}
+
+Table~\ref{tab:map} links each failure mode to the mechanism that addresses it and states the risk that remains. The last column matters as much as the second: none of the mechanisms removes its failure mode.
+
+\begin{table}[h]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{ID} & \textbf{Failure} & \textbf{Mechanism} & \textbf{Residual risk}\\
+\midrule
+F1 & Wrong-branch work & Step~0 (\code{git status}, \code{git branch}); one branch per task; one isolated terminal per agent. & Step~0 detects a shared working directory but does not prevent it. Agents sharing one working tree can still overwrite each other's uncommitted files. The rule itself is only advice.\\
+F2 & Shared-state conflicts & Task-scoped delta files; shared state regenerated by CI; delta check on every pull request. & Bot pull requests may pile up or conflict with many agents. Not measured.\\
+F3 & Unmeasured claims & Rule ``never claim a result that was not measured''; CI as the gate; run link in the pull request; fail loudly. & A person must still follow the link; a compliance failure by the agent is caught only if someone checks.\\
+F4 & Vacuous tests & Test first and confirm failure; mutation testing with baseline validation; equivalent mutants reported. & Mutation score is not correctness. Tests and code written by the same model can share blind spots.\\
+F5 & Heavy local runs & Everything heavy in CI, in parallel, filtered by path. & Queue and start-up latency; quota of CI minutes on private repositories; slower feedback for very small checks.\\
+F6 & Unreviewed integration & Rules, hooks, CI checks, branch protection, human approval. & Hook patterns are best-effort. A solo developer cannot require an approving review from a second person.\\
+F7 & Unconstrained side effects & Deterministic execution layer, strict revalidation, least privilege, audit log. & Schema and validation bugs; attack surfaces beyond the ones anticipated.\\
+\bottomrule
+\end{tabularx}
+\caption{Failure modes, mechanisms and residual risks.}
+\label{tab:map}
+\end{table}
+
+% =====================================================================
+\section{Limitations and threats to validity}
+\label{sec:limits}
+
+\begin{itemize}
+  \item \textbf{No measurement.} This paper reports no data on speed, cost, tokens or defects. The benefits of the method are hypotheses.
+  \item \textbf{Single origin.} The rules come from one practitioner's experience with a small set of projects. The failure modes may not represent other teams or codebases (selection bias).
+  \item \textbf{Prompt compliance.} An instruction file does not guarantee that a model follows it. How often the rules are violated, and how often the mechanisms in Section~\ref{sec:enforcement} catch a violation, has not been recorded.
+  \item \textbf{Mutation testing.} Mutation score measures how sensitive the tests are to changes in the code. It does not show that the code meets its requirements, and equivalent mutants cannot be killed by any test. The AST-based operators are limited to what the engine implements.
+  \item \textbf{Shared blind spots.} If the same model writes the code and the tests, deterministic checks can pass on a wrong interpretation of the requirement. Independent tests or a second source of ground truth are needed to detect this.
+  \item \textbf{CI-only design.} Sending all checks to CI trades feedback latency and CI minutes for a clean local machine. A hybrid (fast checks locally, heavy checks in CI) may be better and has not been compared.
+  \item \textbf{State regeneration under load.} The regeneration pull requests have not been tested with many agents in parallel.
+  \item \textbf{Human review remains necessary.} The method reduces how much code a person must read, but intent, design, security and the tests themselves still need human judgement.
+  \item \textbf{Stack specificity.} Part of the rule set assumes a Python backend (Section~\ref{sec:method}).
+  \item \textbf{Model drift.} Agent behavior depends on the model and tool version. Any measurement should record both and the date.
+  \item \textbf{On the name.} ``Anti-fragile'' follows Taleb's term for systems that gain from disorder \cite{taleb2012}. Here it is used informally: failures caught by deterministic checks are turned into stronger tests and rules. This paper does not show that the method gains from stress in Taleb's formal sense.
+\end{itemize}
+
+% =====================================================================
+\section{Proposed evaluation protocol}
+\label{sec:eval}
+
+The claim that AFAW helps should be tested, not assumed. This section proposes a design that others (or the author) can run.
+
+\textbf{Research questions.}
+\begin{description}[leftmargin=0pt, labelindent=0pt, itemsep=2pt]
+  \item[RQ1] Does state isolation with CI-regenerated context reduce merge conflicts and wrong-branch commits compared with agents sharing context files?
+  \item[RQ2] Does the mutation gate reduce escaped defects and vacuous tests?
+  \item[RQ3] What does the method cost in elapsed time, tokens and CI minutes?
+  \item[RQ4] How much human review effort does each pull request need, and what does the reviewer find?
+\end{description}
+
+\textbf{Design.} Run the same task set under matched conditions: (A) a baseline with minimal agent instructions; (B) full AFAW; and ablations of B that remove one component at a time (state isolation, the mutation gate, CI-only execution). Fix and record the model, the tool version and the date. Randomize the order of tasks and repeat runs, because agent output is not deterministic. Tasks can come from the project's own backlog. Public issue-resolution benchmarks with hidden tests, such as SWE-bench \cite{jimenez2024}, can supply an independent ground truth that the agents' own tests cannot.
+
+\textbf{Metrics.} Table~\ref{tab:metrics} lists the measures and where each can be read from.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.4cm}@{}}
+\toprule
+\textbf{Metric} & \textbf{Definition} & \textbf{Source}\\
+\midrule
+Merge conflicts per PR & Conflicts that need manual resolution & Git history\\
+Wrong-branch commits & Commits made outside the task branch, or blocked attempts & Hook and server logs\\
+Time to green CI & Task assignment to first fully green run & CI API\\
+Tokens per merged task & Model tokens spent until merge & Agent usage logs\\
+CI minutes per merged task & Compute minutes billed & CI billing data\\
+Escaped defects & Failures found by hidden tests or after merge & Hidden tests, issue tracker\\
+Mutation score and coverage & Reported separately for merged files & Mutation engine, coverage tool\\
+Human review minutes per PR & Time a reviewer spends before approving & Reviewer log\\
+Rule violations & Times an agent broke a rule, and by which mechanism it was caught & Hook, CI and protection logs\\
+\bottomrule
+\end{tabularx}
+\caption{Proposed metrics.}
+\label{tab:metrics}
+\end{table}
+
+\textbf{Reporting.} Publish the raw data and the exact instruction files. Report intervals and not only means. Report false approvals first and negative results as well. State the model, tool version and dates so that the result can be read against later models.
+
+% =====================================================================
+\section{Related work}
+
+AFAW builds on established practices rather than replacing them. Test-driven development \cite{beck2002} provides the red--green--refactor loop. Mutation testing goes back to DeMillo, Lipton and Sayward \cite{demillo1978}, and Jia and Harman \cite{jia2011} survey its development. Short-lived branches from an always-deployable main branch follow GitHub Flow \cite{chacon2011}, and commit messages follow the Conventional Commits specification \cite{conventionalcommits}. Instruction files for coding agents are now a common convention; the AGENTS.md format \cite{agentsmd} is one example, and \code{CLAUDE.md} is another. The term ``anti-fragile'' is Taleb's \cite{taleb2012}. SWE-bench \cite{jimenez2024} evaluates language models on real repository issues with hidden tests and is relevant to the evaluation protocol.
+
+This paper does not survey the fast-moving literature on coding agents. Related work is limited to the sources on which the method directly depends.
+
+% =====================================================================
+\section{Conclusion}
+
+AFAW is a set of rules, state files and checks for working with several coding agents on one repository. Its central choice is to let models generate and let deterministic tools verify, with a human approving every merge. It targets seven observed failure modes and states the risk that remains for each. It is a hypothesis about how to work, not a demonstrated result. The protocol in Section~\ref{sec:eval} is offered so that the hypothesis can be tested, and refuted if the data say so.
+
+% =====================================================================
+\section*{Declarations}
+
+\textbf{Availability.} The reference boilerplate (agent instruction file, state layout, scripts and diagrams) is distributed as a repository template; its licence is stated in the repository. % TODO before publishing: add the repository URL or DOI here.
+
+\textbf{Use of AI assistance.} An AI assistant (Claude, Anthropic) was used to help draft and edit this paper and to produce the diagrams. The author defined the method, reviewed the text and is responsible for its content.
+
+% =====================================================================
+\begin{thebibliography}{9}
+\small
+
+\bibitem{agentsmd}
+AGENTS.md. \emph{A simple, open format for guiding coding agents.} \url{https://agents.md/} (accessed 29 September 2026).
+
+\bibitem{beck2002}
+K.~Beck. \emph{Test-Driven Development: By Example.} Addison-Wesley, 2002.
+
+\bibitem{chacon2011}
+S.~Chacon. GitHub Flow. Blog post, 31 August 2011. \url{https://scottchacon.com/2011/08/31/github-flow/}.
+
+\bibitem{conventionalcommits}
+Conventional Commits. \emph{Conventional Commits Specification, version 1.0.0.} \url{https://www.conventionalcommits.org/en/v1.0.0/}.
+
+\bibitem{demillo1978}
+R.~A. DeMillo, R.~J. Lipton and F.~G. Sayward. Hints on test data selection: help for the practicing programmer. \emph{Computer}, 11(4):34--41, 1978. doi:10.1109/C-M.1978.218136.
+
+\bibitem{jia2011}
+Y.~Jia and M.~Harman. An analysis and survey of the development of mutation testing. \emph{IEEE Transactions on Software Engineering}, 37(5):649--678, 2011. doi:10.1109/TSE.2010.62.
+
+\bibitem{jimenez2024}
+C.~E. Jimenez, J.~Yang, A.~Wettig, S.~Yao, K.~Pei, O.~Press and K.~Narasimhan. SWE-bench: Can language models resolve real-world GitHub issues? In \emph{International Conference on Learning Representations (ICLR)}, 2024. arXiv:2310.06770.
+
+\bibitem{taleb2012}
+N.~N. Taleb. \emph{Antifragile: Things That Gain from Disorder.} Random House, 2012.
+
+\end{thebibliography}
+
+% =====================================================================
+\appendix
+
+\section{Complete rule set}
+\label{app:rules}
+
+This appendix reproduces the complete instruction file (\texttt{AGENTS.md}, identical to \texttt{CLAUDE.md}) that the agents receive, section by section, as used by the author. It is the source of truth for the method; the body of the paper summarizes it. Two edits were made for typesetting: the traffic-light emoji of section 3 are written as the words green, yellow and red, and the file's opening heading is omitted.
+
+\medskip
+\noindent\textbf{Stack note.} The reference implementation of these rules targets a Python backend (asynchronous I/O, \texttt{pytest}, \texttt{mypy}, a relational database, a message broker, Terraform and the Model Context Protocol). The stack-independent core is sections 0--3, 11--13 and 17--19. Sections 4--10, 14--16 name concrete Python tools and infrastructure, and should be re-written for another stack while keeping the intent of each rule.
+
+\bigskip
+\begingroup
+\small
+\setlength{\parskip}{3pt}
+\input{appendix_rules.tex}
+\endgroup
+
+\section{Reference repository layout}
+\label{app:layout}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}>{\footnotesize\ttfamily\raggedright\arraybackslash}p{6.9cm}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\multicolumn{1}{@{}l}{\textbf{Path}} & \textbf{Purpose}\\
+\midrule
+AGENTS.md / CLAUDE.md & Agent rules (kept identical, or one imports the other)\\
+state/pending.json & Generated shared task state\\
+state/config.json & Project settings: code folders, critical paths, minimum mutation score\\
+state/tasks/task\_NNN.json & One task file per task, written by the agent\\
+context/global/, context/roles/*/ & Generated last-context files\\
+context/tasks/task\_NNN\_context.json & One delta per task, written by the agent\\
+scripts/merge\_state.py & Regenerates the shared state in CI\\
+scripts/check\_task\_delta.py & Rejects code changes without a valid delta\\
+scripts/mutation\_targets.py & Lists mandatory and optional files to mutate, and the minimum score\\
+.github/workflows/ & CI with path filters and parallel jobs\\
+\bottomrule
+\end{tabularx}
+\caption{Reference layout of the boilerplate.}
+\label{tab:layout}
+\end{table}
+
+\end{document}
