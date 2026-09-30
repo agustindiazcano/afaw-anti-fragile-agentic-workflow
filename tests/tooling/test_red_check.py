@@ -95,16 +95,47 @@ def test_passing_on_old_code_is_read_from_junit() -> None:
         "tests/test_x.py::test_skipped",
     ]
     # A parametrized test is red if at least one case fails; a skip is not a failure.
-    assert red_check.not_red(JUNIT, added) == [
+    passing, missing = red_check.not_red(JUNIT, added)
+    assert passing == [
         "tests/test_x.py::TestGroup::test_added_in_class",
         "tests/test_x.py::test_skipped",
     ]
+    assert missing == []
 
 
-def test_a_test_absent_from_the_report_did_not_fail() -> None:
-    assert red_check.not_red(JUNIT, ["tests/test_x.py::test_missing"]) == [
-        "tests/test_x.py::test_missing"
-    ]
+def test_a_test_absent_from_the_report_is_missing_not_passing() -> None:
+    # Absence is not a verdict: the test did not run (fail loudly, never a silent pass).
+    assert red_check.not_red(JUNIT, ["tests/test_x.py::test_missing"]) == (
+        [],
+        ["tests/test_x.py::test_missing"],
+    )
+
+
+def test_a_module_that_cannot_be_imported_makes_its_tests_red() -> None:
+    report = (
+        '<testsuites><testsuite><testcase classname="" name="tests.test_y">'
+        '<error message="ImportError"/></testcase></testsuite></testsuites>'
+    )
+    assert red_check.not_red(report, ["tests/test_y.py::test_new"]) == ([], [])
+
+
+def test_characterization_tests_are_declared_not_checked() -> None:
+    source = """
+import pytest
+
+
+@pytest.mark.characterization(reason="documents the existing guard")
+def test_existing_behaviour():
+    assert True
+
+
+@pytest.mark.parametrize("x", [1])
+def test_new(x):
+    assert False
+"""
+    assert red_check.characterization("tests/test_z.py", source) == {
+        "tests/test_z.py::test_existing_behaviour": "documents the existing guard"
+    }
 
 
 # ---------------------------------------------------------------- end to end

@@ -46,7 +46,9 @@ def _previous(run: Runner, base: str, path: str) -> tuple[str | None, str | None
         return None, None
     status = old.get("status")
     owner = old.get("owner", "agent")
-    return LEGACY_STATUSES.get(status, status), owner if owner in OWNERS else None
+    if isinstance(status, str):
+        status = LEGACY_STATUSES.get(status, status)
+    return status, owner if owner in OWNERS else None
 
 
 def _exists_on(run: Runner, ref: str, path: str) -> bool:

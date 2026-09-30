@@ -10,14 +10,18 @@ Rules:
   - A test file that cannot even be imported on the old code (the module under test does not
     exist yet) counts as red for all its added tests. This is why the check shows that a test
     fails, not that it fails for the right reason.
-  - A skipped test is not red.
+  - A skipped test is not red. A test absent from the report did not run: the check fails
+    loudly (exit 2) instead of counting it as passing.
+  - A test that documents behavior the code already has is declared with
+    @pytest.mark.characterization(reason="..."); it is excluded and printed for the reviewer.
   - If a task file changed by the pull request declares type tests-only or refactor, the check
     is skipped and the declaration is printed, for the reviewer to see.
 
 The reference implementation runs pytest; another stack replaces run_old().
 
 Run in CI: python -m scripts.red_check --base origin/main
-Exit codes: 0 ok or skipped, 1 an added test passed on the old code, 2 could not run.
+Exit codes: 0 ok or skipped, 1 an added test passed on the old code, 2 could not run
+(including an added test that did not run).
 """
 
 from __future__ import annotations
@@ -85,26 +89,72 @@ def _junit_key(node_id: str) -> tuple[str, str]:
     return ".".join([module, *rest[:-1]]), rest[-1]
 
 
-def not_red(junit_xml: str, added: list[str]) -> list[str]:
-    """Added tests that did not fail on the old code, read from a pytest JUnit report."""
+def not_red(junit_xml: str, added: list[str]) -> tuple[list[str], list[str]]:
+    """Added tests that ran on the old code without failing, and those absent from the report.
+
+    Absence is not a verdict: a test missing from the report did not run, and the caller fails
+    loudly rather than count it as passing.
+    """
+    seen: set[tuple[str, str]] = set()
     failed: set[tuple[str, str]] = set()
     broken_modules: set[str] = set()
     for case in ET.fromstring(junit_xml).iter("testcase"):
-        bad = case.find("failure") is not None or case.find("error") is not None
-        if not bad:
-            continue
         classname, name = case.get("classname", ""), case.get("name", "")
+        bad = case.find("failure") is not None or case.find("error") is not None
         if not classname:  # a collection error: the whole module could not be imported
-            broken_modules.add(name)
+            if bad:
+                broken_modules.add(name)
             continue
-        failed.add((classname, name.split("[", 1)[0]))
-    result = []
+        key = (classname, name.split("[", 1)[0])
+        seen.add(key)
+        if bad:
+            failed.add(key)
+    passing: list[str] = []
+    missing: list[str] = []
     for node_id in added:
-        classname, name = _junit_key(node_id)
+        key = _junit_key(node_id)
         module = _junit_key(node_id.split("::", 1)[0] + "::x")[0]
-        if (classname, name) not in failed and module not in broken_modules:
-            result.append(node_id)
-    return result
+        if module in broken_modules or key in failed:
+            continue
+        (passing if key in seen else missing).append(node_id)
+    return passing, missing
+
+
+def _is_characterization(decorator: ast.expr) -> str | None:
+    """The reason of a @pytest.mark.characterization decorator, or None if it is another one."""
+    target = decorator.func if isinstance(decorator, ast.Call) else decorator
+    if not (isinstance(target, ast.Attribute) and target.attr == "characterization"):
+        return None
+    if isinstance(decorator, ast.Call):
+        values = [k.value for k in decorator.keywords if k.arg == "reason"] + decorator.args
+        for value in values:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                return value.value
+    return ""
+
+
+def characterization(path: str, source: str) -> dict[str, str]:
+    """Tests declared as characterization tests (they document behavior the code already has).
+
+    They are excluded from the check and printed, so the reviewer sees each declaration.
+    """
+    declared: dict[str, str] = {}
+
+    def visit(node: ast.AST, prefix: str) -> None:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name.startswith(
+            "test"
+        ):
+            for decorator in node.decorator_list:
+                reason = _is_characterization(decorator)
+                if reason is not None:
+                    declared[f"{path}::{prefix}{node.name}"] = reason
+
+    for node in ast.parse(source).body:
+        visit(node, "")
+        if isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
+            for item in node.body:
+                visit(item, f"{node.name}::")
+    return declared
 
 
 def _is_test_file(path: str, test_prefixes: tuple[str, ...]) -> bool:
@@ -128,18 +178,32 @@ def skip_declaration(root: Path, base: str) -> str | None:
     return None
 
 
-def run_old(root: Path, base: str, test_files: list[str], added: list[str]) -> str:
-    """Run the added tests on the code at ``base`` with the new test files; return JUnit XML."""
+def run_old(root: Path, base: str, support: list[str], test_files: list[str]) -> str:
+    """Run ``test_files`` on the code at ``base``, with the new versions of the ``support``
+    files copied in; return the JUnit XML report.
+
+    Whole files are run, not node ids, and collection errors do not stop the session: a node id
+    inside a module that cannot be imported would otherwise abort the run with no results.
+    """
     work = Path(tempfile.mkdtemp(prefix="red-check-"))
     tree = work / "tree"
     _git(root, "worktree", "add", "--detach", str(tree), base)
     try:
-        for path in test_files:
+        for path in support:
             target = tree / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(_git(root, "show", f"HEAD:{path}"), encoding="utf-8")
         report = work / "report.xml"
-        command = [sys.executable, "-m", "pytest", *added, "-q", "-p", "no:cacheprovider"]
+        command = [
+            sys.executable,
+            "-m",
+            "pytest",
+            *test_files,
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--continue-on-collection-errors",
+        ]
         subprocess.run(
             [*command, f"--junitxml={report}"],
             cwd=tree,
@@ -173,19 +237,30 @@ def main(argv: list[str] | None = None) -> int:
         diff = _git(root, "diff", "--name-only", "--diff-filter=AM", merge_base, "HEAD")
         test_files = [p for p in diff.split() if _is_test_file(p, prefixes)]
         added: list[str] = []
+        declared: dict[str, str] = {}
         for path in test_files:
             try:
                 old: str | None = _git(root, "show", f"{merge_base}:{path}")
             except StateError:
                 old = None
-            added.extend(added_tests(path, old, _git(root, "show", f"HEAD:{path}")))
+            new = _git(root, "show", f"HEAD:{path}")
+            added.extend(added_tests(path, old, new))
+            declared.update(characterization(path, new))
+        added = [node_id for node_id in added if node_id not in declared]
+        for node_id, reason in sorted(declared.items()):
+            sys.stdout.write(f"DECLARED characterization: {node_id}: {reason}\n")
         if not added:
             sys.stdout.write("OK: no added tests to check.\n")
             return 0
         support = [p for p in diff.split() if p.startswith(prefixes) and p.endswith(".py")]
-        passing = not_red(run_old(root, merge_base, sorted(set(support)), added), added)
+        report = run_old(root, merge_base, sorted(set(support)), test_files)
+        passing, missing = not_red(report, added)
     except StateError as exc:
         sys.stderr.write(f"ERROR: {exc}\n")
+        return 2
+    if missing:
+        for node_id in missing:
+            sys.stderr.write(f"ERROR: {node_id} did not run on the old code\n")
         return 2
     for node_id in passing:
         sys.stderr.write(
