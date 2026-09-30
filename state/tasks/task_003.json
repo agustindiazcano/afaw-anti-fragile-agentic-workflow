@@ -1,0 +1,12 @@
+{
+  "id": "task_003",
+  "title": "Publish a demo dashboard with mock data on GitHub Pages, with screenshots in the README",
+  "role": "maintainer",
+  "type": "feature",
+  "status": "done",
+  "owner": "agent",
+  "branch": "feat/pages-demo-dashboard",
+  "priority": 2,
+  "difficulty": 2,
+  "blocked_by": []
+}

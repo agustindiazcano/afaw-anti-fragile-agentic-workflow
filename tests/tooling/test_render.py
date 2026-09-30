@@ -69,3 +69,16 @@ def test_fmt_num():
     assert fmt_num(4) == "4"
     assert fmt_num(15.5) == "15.5"
     assert fmt_num(4.0) == "4"
+
+
+def test_dashboard_css_braces_are_balanced() -> None:
+    # A lost closing brace turns every later rule into part of the dark-mode media query,
+    # and the light-mode page renders unstyled.
+    from scripts.afaw_state.render import CSS, SERIES_CSS
+
+    for css in (SERIES_CSS, CSS):
+        depth = 0
+        for ch in css:
+            depth += {"{": 1, "}": -1}.get(ch, 0)
+            assert depth >= 0
+        assert depth == 0

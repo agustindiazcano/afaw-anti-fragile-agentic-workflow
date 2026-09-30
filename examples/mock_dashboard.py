@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Build the dashboard and LASTCONTEXT.md from mock data, to preview the views without a repository.
+"""Build the public demo (dashboard and LASTCONTEXT.md) from mock data.
 
-Usage:
-    python examples/mock_dashboard.py [output directory]
+Usage (from the repository root):
+    python -m examples.mock_dashboard [output directory]
 """
 
 from __future__ import annotations
@@ -248,6 +248,7 @@ KNOWLEDGE = [
 ]
 
 CONFIG = {
+    "banner": "Demo with mock data: a fictional project, every task and number is invented.",
     "stale_days": 3,
     "role_tags": {"backend": ["llm", "db", "domain"], "infra": ["infra", "gcp", "terraform"]},
     "reference_docs": [
@@ -387,18 +388,27 @@ FACTS = {
 }
 
 
-def main() -> None:
-    out = Path(sys.argv[1] if len(sys.argv) > 1 else "mock-output")
+def build_demo(out: Path) -> list[Path]:
+    """Write the public demo: index.html (the dashboard) and two sample LASTCONTEXT.md files."""
     out.mkdir(parents=True, exist_ok=True)
     views = build(TASKS, DELTAS, FACTS, CONFIG, AS_OF, KNOWLEDGE)
-    (out / "dashboard-mock.html").write_text(views["dashboard.html"], encoding="utf-8")
-    (out / "LASTCONTEXT-mock.md").write_text(
-        views["context/global/LASTCONTEXT.md"], encoding="utf-8"
-    )
-    (out / "LASTCONTEXT-backend-mock.md").write_text(
-        views["context/roles/backend/LASTCONTEXT.md"], encoding="utf-8"
-    )
-    print(f"wrote dashboard and last-context files to {out}")
+    files = {
+        "index.html": views["dashboard.html"],
+        "LASTCONTEXT.md": views["context/global/LASTCONTEXT.md"],
+        "LASTCONTEXT-backend.md": views["context/roles/backend/LASTCONTEXT.md"],
+    }
+    written = []
+    for name, content in files.items():
+        path = out / name
+        path.write_text(content, encoding="utf-8")
+        written.append(path)
+    return written
+
+
+def main() -> None:
+    out = Path(sys.argv[1] if len(sys.argv) > 1 else "mock-output")
+    written = build_demo(out)
+    sys.stdout.write(f"wrote {len(written)} demo files to {out}\n")
 
 
 if __name__ == "__main__":

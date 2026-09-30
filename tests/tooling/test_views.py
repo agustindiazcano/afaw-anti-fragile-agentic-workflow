@@ -211,3 +211,11 @@ def test_dashboard_warns_when_no_facts():
     html = build(tasks, deltas, None, None, AS_OF)["dashboard.html"]
     assert "No measured facts were supplied" in html
     assert "No data · no measured data" in html
+
+
+def test_banner_is_shown_escaped_when_configured() -> None:
+    tasks, deltas, facts = sample()
+    html = build(tasks, deltas, facts, {"banner": "Demo <mock> data"}, AS_OF)["dashboard.html"]
+    assert '<p class="banner">Demo &lt;mock&gt; data</p>' in html
+    plain = build(tasks, deltas, facts, None, AS_OF)["dashboard.html"]
+    assert 'class="banner"' not in plain

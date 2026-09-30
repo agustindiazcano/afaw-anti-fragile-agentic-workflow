@@ -87,6 +87,10 @@
             "minLength": 1
           },
           "description": "Documents an agent reads first."
+        },
+        "banner": {
+          "type": "string",
+          "description": "A notice shown at the top of the dashboard, e.g. that the data is mock."
         }
       }
     }

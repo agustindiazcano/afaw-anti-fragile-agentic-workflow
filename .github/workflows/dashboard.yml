@@ -1,6 +1,8 @@
 name: Dashboard
 
-# The dashboard shows the state of main. It is rebuilt:
+# Publishes two pages: a demo built from mock data (examples/mock_dashboard.py) at the site
+# root, and this repository's own dashboard, which shows the state of main, at /live/.
+# It is rebuilt:
 #   - on every push to main (after each merge);
 #   - every hour, because the traffic light of tasks in progress depends on the CI
 #     and the activity of their branches, which change without touching main;
@@ -66,11 +68,13 @@ jobs:
           --out build/state
           --as-of "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-      # Publish the dashboard only; the JSON views stay inside the run.
+      # The site: the demo (mock data) at the root, this repository's own dashboard at /live/.
+      # Only the HTML is published; the JSON views stay inside the run.
       - name: Prepare site
         run: |
-          mkdir -p build/site
-          cp build/state/dashboard.html build/site/index.html
+          python -m examples.mock_dashboard build/site
+          mkdir -p build/site/live
+          cp build/state/dashboard.html build/site/live/index.html
 
       - uses: actions/configure-pages@v5
 
