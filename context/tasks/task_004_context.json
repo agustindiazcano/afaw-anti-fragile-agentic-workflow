@@ -8,6 +8,10 @@
     {
       "decision": "Replaced 'ROL:' with 'ROLE:' in all instruction and documentation files.",
       "reason": "Corrected Spanish typo 'ROL' to English 'ROLE' per user request."
+    },
+    {
+      "decision": "Added official DOI 10.5281/zenodo.23050310 to the LaTeX whitepaper.",
+      "reason": "Fulfilled user request to include the official DOI in the document title block and declarations."
     }
   ],
   "files_touched": [
