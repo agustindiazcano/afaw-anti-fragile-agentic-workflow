@@ -18,7 +18,7 @@ CSS = """
   --yellow:#b98900;--green:#2f8a4c;--unknown:#8a8a84}
 @media (prefers-color-scheme:dark){:root{--bg:#171716;--card:#21211f;--ink:#ecece8;
   --muted:#a3a39c;--line:#34342f;--red:#ec6a5e;--yellow:#e3b53c;--green:#5cc27b;
-  --unknown:#8a8a84}
+  --unknown:#8a8a84}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
   font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -94,7 +94,7 @@ SERIES_CSS = """
 :root{--series-1:#2a78d6;--series-2:#eb6834;--series-3:#1baf7a;--series-4:#eda100;
   --series-5:#e87ba4;--track:#cde2fb}
 @media (prefers-color-scheme:dark){:root{--series-1:#3987e5;--series-2:#d95926;
-  --series-3:#199e70;--series-4:#c98500;--series-5:#d55181;--track:#184f95}
+  --series-3:#199e70;--series-4:#c98500;--series-5:#d55181;--track:#184f95}}
 """
 
 STATUS_LABELS = (
