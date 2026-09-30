@@ -51,6 +51,17 @@ jobs:
             fi
           done
 
+      - name: Paper PDF rebuilt with its sources
+        run: |
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          if echo "$changed" | grep -qE '^(docs/paper/afaw\.tex|AGENTS\.md|docs/img/)' \
+             && ! echo "$changed" | grep -qx 'docs/paper/afaw.pdf'; then
+            echo "PROBLEM: the paper's sources changed but docs/paper/afaw.pdf did not."
+            echo "Rebuild it (docs/paper/README.md) and commit the PDF in this pull request."
+            exit 1
+          fi
+          echo "OK: paper PDF in step with its sources."
+
       - name: ADRs, gotchas and links
         run: python -m scripts.check_docs
 

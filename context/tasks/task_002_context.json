@@ -1,0 +1,9 @@
+{
+  "task_id": "task_002",
+  "files_touched": [],
+  "summary": "The compiled paper is committed at docs/paper/afaw.pdf and linked from the README; the PDF is rebuilt from v1.1 (no 'ROL:', repository URL in Availability). A CI step fails a PR that changes the paper's sources without the PDF. ADR 0006 and gotcha 0002 record why.",
+  "next": [
+    "Accept or reject ADR 0006",
+    "Delete the merged branch feat/afaw-v1-1-derived-state on GitHub"
+  ]
+}
