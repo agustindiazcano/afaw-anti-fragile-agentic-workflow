@@ -2,16 +2,40 @@
   "project": "boilerplate",
   "generated": true,
   "generated_by": "scripts/merge_state.py (CI)",
-  "updated_at": "2026-09-29T00:00:00Z",
-  "summary": "Repository freshly initialized from template.",
+  "updated_at": "2026-09-30T00:15:00Z",
+  "summary": "2 of 2 tasks completed; 0 in progress; 0 pending; 0 blocked.",
   "architecture_decisions": [
     {
       "id": "dec_001",
       "date": "2026-09-29",
       "decision": "Initial template setup.",
       "source_task": null
+    },
+    {
+      "id": "dec_task_999_1",
+      "date": "2026-09-29",
+      "decision": "Added setup_protection.sh to enforce required checks.",
+      "source_task": "task_999"
+    },
+    {
+      "id": "dec_task_004_1",
+      "date": "2026-09-30",
+      "decision": "Replaced 'ROL:' with 'ROLE:' in all instruction and documentation files.",
+      "source_task": "task_004"
+    },
+    {
+      "id": "dec_task_004_2",
+      "date": "2026-09-30",
+      "decision": "Added official DOI 10.5281/zenodo.23050310 to the LaTeX whitepaper.",
+      "source_task": "task_004"
     }
   ],
-  "dependencies": {},
-  "last_merged_tasks": []
+  "dependencies": {
+    "architect": [],
+    "technical writer": []
+  },
+  "last_merged_tasks": [
+    "task_004",
+    "task_999"
+  ]
 }

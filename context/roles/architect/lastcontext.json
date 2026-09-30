@@ -1,0 +1,17 @@
+{
+  "generated": true,
+  "generated_by": "scripts/merge_state.py (CI)",
+  "role": "architect",
+  "updated_at": "2026-09-29T00:00:00Z",
+  "last_agent_session": "template-setup",
+  "current_focus": "Idle.",
+  "recent_decisions": [
+    {
+      "task_id": "task_999",
+      "decision": "Added setup_protection.sh to enforce required checks.",
+      "reason": "Ensure template repositories can easily apply branch protection."
+    }
+  ],
+  "open_questions": [],
+  "next_steps": []
+}

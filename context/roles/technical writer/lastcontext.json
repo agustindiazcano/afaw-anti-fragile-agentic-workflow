@@ -1,0 +1,22 @@
+{
+  "generated": true,
+  "generated_by": "scripts/merge_state.py (CI)",
+  "role": "technical writer",
+  "updated_at": "2026-09-30T00:15:00Z",
+  "last_agent_session": "antigravity",
+  "current_focus": "Idle.",
+  "recent_decisions": [
+    {
+      "task_id": "task_004",
+      "decision": "Replaced 'ROL:' with 'ROLE:' in all instruction and documentation files.",
+      "reason": "Corrected Spanish typo 'ROL' to English 'ROLE' per user request."
+    },
+    {
+      "task_id": "task_004",
+      "decision": "Added official DOI 10.5281/zenodo.23050310 to the LaTeX whitepaper.",
+      "reason": "Fulfilled user request to include the official DOI in the document title block and declarations."
+    }
+  ],
+  "open_questions": [],
+  "next_steps": []
+}

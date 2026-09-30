@@ -1,13 +1,26 @@
 {
   "generated": true,
   "generated_by": "scripts/merge_state.py (CI)",
-  "generated_at": "2026-09-29T00:00:00Z",
+  "generated_at": null,
   "note": "Do not edit by hand. Source of truth is state/tasks/*.json, one file per task.",
-  "tasks": {},
+  "tasks": {
+    "task_004": {
+      "status": "completed",
+      "owner": "antigravity",
+      "blocked_by": [],
+      "locked_files": []
+    },
+    "task_999": {
+      "status": "completed",
+      "owner": "template-setup",
+      "blocked_by": [],
+      "locked_files": []
+    }
+  },
   "summary": {
     "pending": 0,
     "in_progress": 0,
     "blocked": 0,
-    "completed": 0
+    "completed": 2
   }
 }
