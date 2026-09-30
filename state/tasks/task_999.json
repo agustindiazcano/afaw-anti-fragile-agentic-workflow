@@ -1,11 +1,12 @@
 {
   "id": "task_999",
-  "title": "[EXAMPLE] Setup branch protection script",
+  "title": "Setup branch protection script",
   "role": "architect",
-  "status": "completed",
-  "owner": "template-setup",
+  "type": "chore",
+  "status": "done",
+  "owner": "agent",
+  "branch": "feat/template-ready",
   "priority": 5,
   "difficulty": 1,
-  "blocked_by": [],
-  "locked_files": []
+  "blocked_by": []
 }

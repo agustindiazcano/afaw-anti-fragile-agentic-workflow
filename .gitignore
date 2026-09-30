@@ -19,3 +19,18 @@ htmlcov/
 # Operating System files
 .DS_Store
 Thumbs.db
+
+# Derived views and measured facts: rebuilt on demand, never committed (scripts/build_state.py)
+build/
+
+# Paper build: the appendix is generated from AGENTS.md (scripts/rules_to_tex.py)
+docs/paper/appendix_rules.tex
+docs/paper/*.aux
+docs/paper/*.log
+docs/paper/*.out
+docs/paper/*.pdf
+
+# Claude Code session artifacts
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+mock-output/

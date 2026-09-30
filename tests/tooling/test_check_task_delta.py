@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -45,6 +46,16 @@ def test_code_file_missing_from_files_touched_is_reported(project: Project) -> N
     problems = check_task_delta.find_problems(changed, project.root)
     assert len(problems) == 1
     assert "src/back/other.py" in problems[0]
+
+
+def test_files_touched_listing_an_unchanged_file_is_reported(project: Project) -> None:
+    # files_touched must equal the changed code files, so it is a measured value, not a claim.
+    project.add_task("task_001", status="in_progress")
+    project.add_delta("task_001", files_touched=["src/back/health.py", "src/back/never_changed.py"])
+    problems = check_task_delta.find_problems(["src/back/health.py", DELTA], project.root)
+    assert len(problems) == 1
+    assert "not changed by this pull request" in problems[0]
+    assert "src/back/never_changed.py" in problems[0]
 
 
 def test_invalid_delta_is_reported(project: Project) -> None:
@@ -132,3 +143,30 @@ def test_main_returns_0_when_everything_is_in_order(
 ) -> None:
     monkeypatch.setattr(check_task_delta, "changed_files", lambda base, root: ["docs/a.md"])
     assert check_task_delta.main(["--root", str(project.root), "--base", "origin/main"]) == 0
+
+
+def test_write_fills_files_touched_from_the_diff(
+    project: Project, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project.add_task("task_001", status="in_progress")
+    project.add_delta("task_001", files_touched=["stale.py"], summary="Did a thing.")
+    changed = ["src/back/b.py", "docs/a.md", "src/back/a.py", DELTA]
+    monkeypatch.setattr(check_task_delta, "changed_files", lambda base, root: changed)
+    args = ["--root", str(project.root), "--base", "origin/main", "--write", "task_001"]
+    assert check_task_delta.main(args) == 0
+    delta = json.loads((project.root / DELTA).read_text(encoding="utf-8"))
+    assert delta["files_touched"] == ["src/back/a.py", "src/back/b.py"]
+    assert delta["summary"] == "Did a thing."
+    assert check_task_delta.find_problems(changed, project.root) == []
+
+
+def test_write_creates_a_missing_delta(project: Project, monkeypatch: pytest.MonkeyPatch) -> None:
+    project.add_task("task_002", status="in_progress")
+    monkeypatch.setattr(check_task_delta, "changed_files", lambda base, root: ["src/x.py"])
+    args = ["--root", str(project.root), "--base", "origin/main", "--write", "task_002"]
+    assert check_task_delta.main(args) == 0
+    path = project.root / "context/tasks/task_002_context.json"
+    assert json.loads(path.read_text(encoding="utf-8")) == {
+        "task_id": "task_002",
+        "files_touched": ["src/x.py"],
+    }

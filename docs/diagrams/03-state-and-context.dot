@@ -13,24 +13,22 @@ digraph state_and_context {
   pr    [label="Task PR\nthe delta and task file travel with the code"];
 
   node [fillcolor="#dcfce7", color="#15803d"];
-  check [label="CI: scripts/check_task_delta.py\nCode changed without a valid delta listing\nthe files in files_touched: PR rejected"];
-  merge [label="CI after the merge: scripts/merge_state.py\nregenerates the shared state files"];
-
-  node [fillcolor="#f5f7fa", color="#52606d"];
-  spr   [label="State PR opened by CI"];
+  check [label="CI: check_task_files.py and check_task_delta.py\nlifecycle, no declared measurements, unique ids,\nfiles_touched equal to the changed code files"];
 
   node [fillcolor="#fef3c7", color="#b45309"];
-  human [label="Human approves the state PR"];
+  human [label="Human approves and merges the PR"];
 
   node [fillcolor="#ede9fe", color="#6d28d9"];
-  gen   [label="Generated files on main, never edited by hand\nstate/pending.json\ncontext/global/lastcontext.json\ncontext/roles/*/lastcontext.json"];
+  src   [label="Sources on main (versioned)\nstate/tasks/*.json, context/tasks/*.json\ndocs/adr/*.md, docs/gotchas/*.md"];
 
-  node [fillcolor="#f5f7fa", color="#52606d"];
-  status [label="Status report\nreads only state/pending.json from origin/main"];
+  node [fillcolor="#dcfce7", color="#15803d"];
+  build [label="scripts/build_state.py (on demand, deterministic)\n+ facts measured from git and the CI API"];
+
+  node [fillcolor="#f5f7fa", color="#52606d", style="rounded,filled,dashed"];
+  views [label="Derived views in build/, never committed\nLASTCONTEXT.md (global, per role), pending, history,\nmetrics, dashboard"];
 
   agent -> own -> pr -> check;
-  check -> merge [label=" merged"];
-  merge -> spr -> human;
-  human -> gen [label=" merged"];
-  gen -> status [style=dashed];
+  check -> human [label=" checks pass"];
+  human -> src [label=" merged"];
+  src -> build -> views;
 }

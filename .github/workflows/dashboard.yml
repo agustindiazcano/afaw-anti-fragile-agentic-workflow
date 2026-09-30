@@ -1,0 +1,89 @@
+name: Dashboard
+
+# The dashboard shows the state of main. It is rebuilt:
+#   - on every push to main (after each merge);
+#   - every hour, because the traffic light of tasks in progress depends on the CI
+#     and the activity of their branches, which change without touching main;
+#   - on demand.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  pages: write
+  id-token: write
+
+# One build at a time; a queued run replaces a pending one, and a deploy in
+# progress is never cancelled.
+concurrency:
+  group: dashboard
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history: creation dates and remote branches
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Facts of merged tasks are final; reuse them to save API calls.
+      - name: Restore cached facts
+        uses: actions/cache/restore@v4
+        with:
+          path: build/facts.json
+          key: afaw-facts-${{ github.run_id }}
+          restore-keys: afaw-facts-
+
+      - name: Collect measured facts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m scripts.collect_facts --ref origin/main --out build/facts.json
+
+      - name: Save facts
+        uses: actions/cache/save@v4
+        with:
+          path: build/facts.json
+          key: afaw-facts-${{ github.run_id }}
+
+      # The run's own time is the reference, so inactivity is measured against now.
+      - name: Build views
+        run: >-
+          python -m scripts.build_state
+          --ref origin/main
+          --facts build/facts.json
+          --out build/state
+          --as-of "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      # Publish the dashboard only; the JSON views stay inside the run.
+      - name: Prepare site
+        run: |
+          mkdir -p build/site
+          cp build/state/dashboard.html build/site/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

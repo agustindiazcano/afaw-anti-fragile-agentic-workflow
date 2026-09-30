@@ -1,30 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Task context delta",
+  "description": "What a task changed and where it stands. files_touched must equal the code files the pull request changes (scripts/check_task_delta.py). Decisions do not go here: they are ADRs in docs/adr/.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["task_id", "role", "agent", "branch", "written_at", "decisions", "files_touched"],
+  "required": ["task_id", "files_touched"],
   "properties": {
     "task_id": { "type": "string", "pattern": "^task_[0-9]{3,}$" },
-    "role": { "type": "string" },
-    "agent": { "type": "string" },
-    "branch": { "type": "string" },
-    "written_at": { "type": "string" },
-    "decisions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["decision"],
-        "properties": {
-          "decision": { "type": "string" },
-          "reason": { "type": "string" }
-        }
-      }
-    },
+    "files_touched": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "summary": { "type": "string", "description": "What was done." },
+    "next": { "type": "array", "items": { "type": "string" }, "description": "What is left." },
     "dependencies_added": { "type": "array", "items": { "type": "string" } },
-    "files_touched": { "type": "array", "items": { "type": "string" } },
-    "blocked_by_lock": { "type": "array", "items": { "type": "string" } },
-    "remaining_work": { "type": "array", "items": { "type": "string" } },
     "notes": { "type": "string" }
   }
 }

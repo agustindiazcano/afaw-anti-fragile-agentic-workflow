@@ -14,15 +14,15 @@ All diagrams are rendered from `docs/diagrams/*.dot`. Use the SVG in a README (G
 ## Markdown snippets
 
 ```markdown
-![AFAW overview: the human opens one isolated terminal per agent, each agent works on its own branch, CI validates in the cloud, and the human approves every PR before it reaches main.](docs/img/01-overview.svg)
+![AFAW overview: one terminal per agent, each on its own branch running only the test it writes; CI runs every other check; the human approves every PR; derived views are built from main on demand.](docs/img/01-overview.svg)
 
-![Life of a task in 12 steps, from asking for a ROL to deleting the branch after the merge.](docs/img/02-task-lifecycle.svg)
+![Life of a task in 12 steps, from asking for a ROLE to deleting the branch after the merge.](docs/img/02-task-lifecycle.svg)
 
-![State and context: the agent writes only its delta and task file; CI regenerates the shared state and opens a state PR that the human approves.](docs/img/03-state-and-context.svg)
+![State and context: the agent writes only its delta and task file; CI checks them; build_state.py derives the views from the sources on main, never committed.](docs/img/03-state-and-context.svg)
 
-![CI pipeline: path filters route a push to parallel jobs; document-only changes run nothing.](docs/img/04-ci-pipeline.svg)
+![CI pipeline: path filters route a change to parallel jobs, including the red-first check and the state and docs checks; document-only changes run nothing.](docs/img/04-ci-pipeline.svg)
 
-![Mutation testing flow: baseline, mutants, re-run, fix survivors, block the PR when a mandatory file is below the minimum score.](docs/img/05-mutation-testing.svg)
+![Mutation testing flow: baseline, mutants, re-run, fix survivors, human-only equivalences, block the PR when a mandatory file is below the minimum score.](docs/img/05-mutation-testing.svg)
 
 ![Control layers: advice in AGENTS.md, hooks, CI checks, branch protection, human approval.](docs/img/06-control-layers.svg)
 ```
@@ -30,5 +30,5 @@ All diagrams are rendered from `docs/diagrams/*.dot`. Use the SVG in a README (G
 ## Editing a diagram
 
 1. Edit the matching file in `docs/diagrams/`.
-2. Run `node scripts/build_diagrams.mjs`.
+2. Render it with Graphviz: `dot -Tsvg docs/diagrams/<name>.dot -o docs/img/<name>.svg` and `dot -Tpng -Gdpi=200 docs/diagrams/<name>.dot -o docs/img/<name>.png`.
 3. Look at the new PNG before committing: long labels can widen a box, and a changed edge can reroute the layout.

@@ -1,16 +1,5 @@
 {
   "task_id": "task_999",
-  "role": "architect",
-  "agent": "template-setup",
-  "branch": "feat/template-ready",
-  "written_at": "2026-09-29T00:00:00Z",
-  "decisions": [
-    {
-      "decision": "Added setup_protection.sh to enforce required checks.",
-      "reason": "Ensure template repositories can easily apply branch protection."
-    }
-  ],
-  "files_touched": [
-    "scripts/setup_protection.sh"
-  ]
+  "files_touched": ["scripts/setup_protection.sh"],
+  "summary": "Added scripts/setup_protection.sh so repositories created from the template can apply branch protection and required checks. Migrated to the v1.1 delta schema by task_001."
 }

@@ -18,3 +18,6 @@ strict = true
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+markers = [
+    "characterization(reason): documents behavior the code already has; the red-first check skips it",
+]

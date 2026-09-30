@@ -11,28 +11,84 @@
     "code_prefixes": {
       "type": "array",
       "description": "Folders (with trailing slash) whose changes count as code and require a context delta.",
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "ignored_names": {
       "type": "array",
       "description": "File names that never count as code, e.g. placeholders.",
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "test_prefixes": {
       "type": "array",
       "description": "Folders that hold tests. They count as code but are never mutated.",
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "mutation_critical_paths": {
       "type": "array",
       "description": "Folders where mutation testing is mandatory (money, security, concurrency, public contracts).",
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "mutation_min_score": {
       "type": "number",
       "description": "Minimum mutation score, in percent, for the mandatory files.",
       "minimum": 0,
       "maximum": 100
+    },
+    "dashboard": {
+      "type": "object",
+      "description": "Settings of the derived views (scripts/build_state.py).",
+      "additionalProperties": false,
+      "properties": {
+        "stale_days": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "A task in progress with no commit or CI run for longer turns yellow."
+        },
+        "lastcontext_size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Recently merged tasks shown per role."
+        },
+        "chart_days": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Days shown in the tasks-merged-per-day chart."
+        },
+        "next_size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Pending tasks listed under 'Next, in order'."
+        },
+        "knowledge_budget": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Active ADRs and gotchas above which a review is due."
+        },
+        "role_tags": {
+          "type": "object",
+          "description": "Role name -> list of tags; filters the per-role last-context."
+        },
+        "reference_docs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Documents an agent reads first."
+        }
+      }
     }
   }
 }

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Equivalent mutants accepted by the human",
+  "description": "Written by the human only; a hook denies agent writes and CI shows every change in the pull request. Each entry is bound to a hash of the mutated file, so it expires when the file changes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mutants"],
+  "properties": {
+    "mutants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "mutant", "file_sha256", "reason"],
+        "properties": {
+          "file": { "type": "string", "minLength": 1 },
+          "mutant": { "type": "string", "minLength": 1, "description": "The engine's mutant id." },
+          "file_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "reason": { "type": "string", "minLength": 1, "description": "Why no test can kill it." }
+        }
+      }
+    }
+  }
+}

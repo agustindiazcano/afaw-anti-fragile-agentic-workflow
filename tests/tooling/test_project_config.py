@@ -74,3 +74,24 @@ def test_file_classification() -> None:
     assert not config.is_code("src/.gitkeep")
     assert not config.is_critical("docs/pay/charge.py")
     assert not config.is_critical("tests/pay/test_charge.py")
+
+
+def test_dashboard_settings_are_accepted(project: Project) -> None:
+    project.write(
+        "state/config.json",
+        {
+            "dashboard": {
+                "stale_days": 3,
+                "knowledge_budget": 40,
+                "role_tags": {"backend": ["db"]},
+                "reference_docs": ["README.md"],
+            }
+        },
+    )
+    assert load_config(project.root).code_prefixes == ("src/", "tests/", "scripts/")
+
+
+def test_unknown_dashboard_setting_is_rejected(project: Project) -> None:
+    project.write("state/config.json", {"dashboard": {"stale_dayz": 3}})
+    with pytest.raises(StateError, match="stale_dayz"):
+        load_config(project.root)

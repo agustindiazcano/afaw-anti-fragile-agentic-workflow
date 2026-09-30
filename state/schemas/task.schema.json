@@ -1,22 +1,36 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Task",
+  "description": "Declared values only. Timestamps, CI results and the traffic light are measured and derived by scripts/build_state.py; a task file that declares them is rejected.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "title", "role", "status", "owner", "priority", "difficulty", "blocked_by", "locked_files"],
+  "required": ["id", "title", "role", "type", "status", "priority", "difficulty", "blocked_by"],
   "properties": {
     "id": { "type": "string", "pattern": "^task_[0-9]{3,}$" },
     "title": { "type": "string", "minLength": 1 },
-    "role": { "type": "string" },
-    "status": { "enum": ["pending", "in_progress", "blocked", "completed"] },
-    "owner": { "type": ["string", "null"] },
-    "branch": { "type": ["string", "null"] },
-    "priority": { "type": "integer", "minimum": 1, "maximum": 5, "description": "1 = most urgent" },
-    "difficulty": { "type": "integer", "minimum": 1, "maximum": 5, "description": "1 = trivial, 5 = very hard" },
-    "blocked_by": { "type": "array", "items": { "type": "string" } },
-    "locked_files": { "type": "array", "items": { "type": "string" } },
-    "pr": { "type": ["string", "null"] },
-    "created_at": { "type": "string" },
-    "updated_at": { "type": "string" }
+    "role": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "description": "Names a folder of the derived views, so it is restricted."
+    },
+    "type": {
+      "enum": ["feature", "fix", "chore", "tests-only", "refactor"],
+      "description": "tests-only and refactor skip the red-first check."
+    },
+    "status": { "enum": ["backlog", "pending", "in_progress", "done", "cancelled"] },
+    "owner": {
+      "enum": ["agent", "human"],
+      "description": "Default agent. A human task needs no branch and may go from pending to done."
+    },
+    "branch": { "type": "string", "minLength": 1 },
+    "priority": { "type": "integer", "minimum": 1, "maximum": 5, "description": "1 = most urgent, 5 = least urgent" },
+    "difficulty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "An estimate: 1 = trivial, 5 = very hard or uncertain."
+    },
+    "blocked_by": { "type": "array", "items": { "type": "string", "pattern": "^task_[0-9]{3,}$" } },
+    "notes": { "type": "string" }
   }
 }

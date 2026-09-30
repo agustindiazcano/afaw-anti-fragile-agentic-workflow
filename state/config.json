@@ -1,8 +1,17 @@
 {
-  "_comment": "mutation_critical_paths lists directories where mutation testing is strictly enforced. mutation_min_score is the required percentage of killed mutants.",
-  "code_prefixes": ["src/", "tests/", "scripts/"],
+  "_comment": "Per-project settings. code_prefixes: folders whose changes need a context delta. mutation_critical_paths: folders where mutation testing is mandatory; mutation_min_score: required percentage of killed mutants there. dashboard: settings of the derived views.",
+  "code_prefixes": ["src/", "tests/", "scripts/", "examples/", ".claude/hooks/"],
   "ignored_names": [".gitkeep"],
   "test_prefixes": ["tests/"],
   "mutation_critical_paths": ["src/back/domain/", "src/back/security/"],
-  "mutation_min_score": 80
+  "mutation_min_score": 80,
+  "dashboard": {
+    "stale_days": 3,
+    "lastcontext_size": 5,
+    "chart_days": 30,
+    "next_size": 10,
+    "knowledge_budget": 40,
+    "role_tags": {},
+    "reference_docs": ["README.md", "AGENTS.md", "docs/paper/afaw.tex"]
+  }
 }
