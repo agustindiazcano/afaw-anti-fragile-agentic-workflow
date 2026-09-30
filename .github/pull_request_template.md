@@ -1,14 +1,12 @@
 ## Description
-Include a summary of the change and which task it completes.
+What changed and why. Name the task: `task_NNN`.
 
-**Task Reference:**
-Fixes # (issue) or Task NNN
-
-## CI Run
-Link to the passing CI run (Tests, Lint, Delta Check):
-- [CI Run Link Here]()
+## CI run
+Link to the run (checks, scripts CI). Do not paste local output.
 
 ## Checklist
-- [ ] **Tests**: I have added/updated tests for my changes (or AST Mutation passed).
-- [ ] **Delta**: I have updated or created the context delta (`context/tasks/task_NNN_context.json`) listing all touched code files.
-- [ ] **Docs**: I have updated the documentation (`README.md`, diagrams, etc.) if this introduces architectural changes.
+- [ ] **Delta**: `summary` and `next` written; `files_touched` filled with `python -m scripts.check_task_delta --base origin/main --write task_NNN`.
+- [ ] **Tests**: each added test failed before the change (the red-first check measures it), or the task declares `tests-only` / `refactor`.
+- [ ] **Decisions**: any decision that constrains later work is an ADR in `docs/adr/` (status `proposed`).
+- [ ] **Equivalent mutants**: proposed here with their reason, never written to `state/equivalent_mutants.json`.
+- [ ] **Docs**: README or docs updated if a measured number or the architecture changed.

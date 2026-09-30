@@ -2,248 +2,185 @@
 
 **A deterministic, multi-agent methodology for AI-assisted software development.**
 
-Moving from a single AI assistant in your IDE to several autonomous agents working on the same repository tends to create operational chaos: branch collisions, tests that pass by accident (vacuous tests), overwritten context and hallucinated results.
+Several coding agents working on one repository fail in predictable ways: they collide on branches and on shared context files, claim results they never measured, and write tests that pass whatever the code does. AFAW is a repository-level method and boilerplate that lets agents write code in parallel while deterministic tools decide whether the result is acceptable and a human approves every merge.
 
-AFAW is a methodological framework and a repository-level boilerplate for governing that chaos. It lets several agents write code in parallel while constraining them with deterministic validation gates.
+*The reference implementation targets a Python backend; the stack-specific rules are meant to be adapted.*
 
-*Reference rules target a Python backend and can be adapted to other stacks.*
+White paper: [`docs/paper/afaw.tex`](docs/paper/afaw.tex) · DOI [10.5281/zenodo.23050310](https://doi.org/10.5281/zenodo.23050310)
 
 ---
 
 ## Index
 
-1. **[The Problem](#the-problem)**: Predictable failure modes of multi-agent development.
-2. **[Core Principle](#core-principle-the-ai-decides-the-engine-measures)**: The AI proposes, the engine measures.
-3. **[Pillars](#pillars)**: Isolation, state as code, TDD, CI verification, mutation testing, human authority.
-4. **[Who It Is For](#who-it-is-for)**
-5. **[System Overview](#system-overview)**: Multi-agent topology, branch isolation, cloud CI, human sign-off.
-6. **[How It Works](#how-it-works)**:
-   - 6.1 Isolated state per task
-   - 6.2 One task, one branch, atomic commits
-   - 6.3 Strict TDD
-   - 6.4 Validation in CI, in parallel
-   - 6.5 Mutation testing on the diff
-   - 6.6 Human in the loop
-   - 6.7 Roles
-7. **[The Life of a Task](#the-life-of-a-task)**: 12-step lifecycle from `ROLE:` consultation to merge and branch deletion.
-8. **[Directory Structure](#directory-structure)**: Repository layout, agent skills, state definitions, tooling.
-9. **[Getting Started](#getting-started)**: One-time setup for a new repository.
-10. **[Daily Workflow](#daily-workflow)**: How to work with the agents once set up.
-11. **[Scope and Limits](#scope-and-limits)**
-12. **[Rebuilding the Diagrams](#rebuilding-the-diagrams)**
-13. **[Citation](#citation)**, **[Author](#author)**, **[License](#license)**
+1. [Core principle](#core-principle-the-ai-decides-the-engine-measures)
+2. [Failure modes and mechanisms](#failure-modes-and-mechanisms)
+3. [System overview](#system-overview)
+4. [How it works](#how-it-works)
+5. [The life of a task](#the-life-of-a-task)
+6. [Directory structure](#directory-structure)
+7. [Getting started](#getting-started)
+8. [Daily workflow](#daily-workflow)
+9. [Scope and limits](#scope-and-limits)
+10. [Rebuilding the diagrams and the paper](#rebuilding-the-diagrams-and-the-paper)
+11. [Citation, author, license](#citation)
 
 ---
 
-## The Problem
+## Core principle: "The AI decides, the engine measures"
 
-Working with several agents on one repo tends to fail in predictable ways:
+A model proposes and writes code; its own assessment is never trusted. Every number (tests, types, coverage, mutation score, task timings, the traffic light) comes from a deterministic tool, and a value an agent could have made up is rejected where it would be declared.
 
-- Agents start coding on whatever branch is checked out and collide with each other.
-- Two agents update the same shared context file (`LASTCONTEXT`, `PENDING`) and produce merge conflicts.
-- Agents claim results they never measured, or write tests that pass no matter what.
-- Heavy test suites run on the local machine and block the workflow.
-- Nothing prevents a push to `main`.
+## Failure modes and mechanisms
 
-These rules come from real mistakes observed while working with agents.
+| Failure | Mechanism | What remains |
+|---|---|---|
+| Wrong-branch work | Step 0 (`git status`, `git branch`), one branch per task, one terminal per agent; a hook denies a push to `main` | Agents sharing one working tree can still overwrite uncommitted files |
+| Shared-state conflicts | Each task writes only its own files; shared views are derived on demand and never committed | Agents do not see unmerged work on other branches |
+| Unmeasured claims | Measured values are rejected in task files; `files_touched` must equal the diff; the red step is verified in CI | A person must still follow the CI link |
+| Vacuous tests | Red-first check; mutation testing on the diff; equivalent mutants accepted only by the human | Mutation score is not correctness |
+| Heavy local runs | Two tiers: single tests locally, everything else in CI, in parallel | CI queue latency and minutes |
+| Unreviewed integration | Hooks, CI checks, branch protection, human approval | Hooks are best-effort |
 
----
+## System overview
 
-## Core Principle: "The AI decides, the engine measures"
-
-Probabilistic models (LLMs) are not sources of truth. In AFAW the AI proposes and writes code, but its own assessment is never trusted. Every metric (tests, types, coverage, mutation score) comes from deterministic tools run in CI.
-
----
-
-## Pillars
-
-- **Strict per-task isolation:** one agent, one task, one isolated branch, in its own terminal. Agents do not work on `main` and do not share a working directory.
-- **State as code:** global and per-role context is stored in versioned `.json` files. Each agent writes only its own delta and its task file. Aggregated state (`state/pending.json`, `context/**/lastcontext.json`) is never edited manually; CI regenerates it after each merge, which avoids conflicts.
-- **Strict TDD:** the failing test comes first, then the minimum code. A bug starts with a test that reproduces it.
-- **Deterministic verification in CI:** fast checks (linters, type checks, diff tests) run in seconds locally; heavy suites (AST mutation, full integration, load) run in parallel in the cloud with path filters. With branch protection and required checks, a failing CI blocks the PR.
-- **Mutation testing on the diff:** to stop the AI from writing complacent tests that pass without checking anything, the engine injects mutations only into modified files. In critical modules (money, security, concurrency, public contracts), a file below the minimum score blocks the PR; elsewhere it is optional and each project decides.
-- **Strict layer isolation:** clear separation between adapters, services, domain logic and external tool execution.
-- **Human authority:** the agent creates branches, writes code and proposes Pull Requests. A human approves every PR and decides every merge. These rules are also enforced outside the prompt (branch protection, hooks and CI), because prompt instructions are advice, not guarantees.
-
----
-
-## Who It Is For
-
-Engineers and teams that want to scale development with several AI agents (Claude Code, Cursor, etc.) with greater verifiability and traceability.
-
----
-
-## System Overview
-
-![AFAW overview: the human opens one isolated terminal per agent, each agent works on its own branch, CI validates in the cloud, and the human approves every PR before it reaches main. CI also regenerates the shared state through its own PR.](docs/img/01-overview.svg)
+![AFAW overview: the human opens one terminal per agent; each agent works on its own branch and runs only the test it is writing; CI runs every other check; the human approves every PR; derived views are built from main on demand.](docs/img/01-overview.svg)
 
 *Colors in all diagrams: blue = agent action, amber = human, green = CI or deterministic check, purple = state files, red = blocked.*
 
----
+## How it works
 
-## How It Works
+### 1. Task files and derived state
 
-### 1. Isolated state per task
+An agent writes only two files: its task file `state/tasks/task_NNN.json` (declared values: title, role, type, status, owner, priority, difficulty, dependencies, branch) and its delta `context/tasks/task_NNN_context.json` (`summary`, `next`, `files_touched`). Their shape is defined once, in `state/schemas/`.
 
-Agents never edit shared state files. Each agent writes only its own delta (`context/tasks/task_NNN_context.json`) and its task file (`state/tasks/task_NNN.json`). `state/pending.json` and the global/role `lastcontext.json` files are regenerated by CI (`scripts/merge_state.py`), which opens a PR for human approval. CI rejects code changes that come without a valid delta (`scripts/check_task_delta.py`).
+Everything shared is **derived, never committed**: `python -m scripts.build_state --ref origin/main` builds the pending view, the history of done tasks, the metrics, the dashboard and the `LASTCONTEXT.md` files into `build/`. Timestamps and CI results are measured from git and the CI API (`python -m scripts.collect_facts`), never declared; the traffic light is a rule:
 
-![State and context: the agent writes only its delta and task file; CI checks the delta, regenerates the shared state after the merge and opens a state PR that the human approves.](docs/img/03-state-and-context.svg)
+- 🔴 a task it depends on is not done, or CI fails on the latest commit of its branch
+- 🟡 in progress with no commit or CI run for more than `stale_days`
+- 🟢 otherwise; "no data" when nothing was measured
 
-### 2. One task, one branch, atomic commits
+![State and context: the agent writes only its delta and task file; CI checks them; after the merge the sources on main feed build_state.py, which derives the views into build/.](docs/img/03-state-and-context.svg)
 
-Before touching any file the agent checks `git status` and `git branch` and creates a new branch named after the task. Conventional Commits, one feature per commit, documentation in its own commit.
+### 2. Project knowledge
 
-### 3. Strict TDD
+State says *what*; prose says *why*. Decisions are ADRs in `docs/adr/`, operational traps are gotchas in `docs/gotchas/` (templates in `docs/templates/`). The generated `LASTCONTEXT.md` indexes them with one line each, next to the current state, what waits on the human and the next tasks. A record leaves the index only for an explicit reason (superseded, deprecated, resolved, or **promoted** to a mechanism), never for its age, and a budget tells the human when to prune. See [ADR 0001](docs/adr/0001-record-decisions-as-adrs.md).
 
-Test first, confirm it fails, then write the minimum code. Bugs start with a failing reproduction test.
+### 3. Strict TDD in two tiers
 
-### 4. Validation runs in CI, in parallel
+Locally, the agent runs only the test it is writing. CI runs everything else, including the **red-first check** (`python -m scripts.red_check`): each test a pull request adds must fail on the code before the change.
 
-Tests, linters, type checks and builds run in the cloud with path filters, so each job runs only when its files change. Document-only changes trigger nothing.
+![CI pipeline: path filters route a change to back-end, front-end, red-first, mutation and state checks in parallel; documents-only changes run nothing.](docs/img/04-ci-pipeline.svg)
 
-![CI pipeline: path filters route a push to back-end, front-end and mutation jobs that run in parallel, document-only changes run nothing, and load and chaos tests are separate manual or scheduled workflows.](docs/img/04-ci-pipeline.svg)
+### 4. Mutation testing on the diff
 
-### 5. Mutation testing on the diff
+Only new or modified files are mutated. In critical modules a file below the minimum blocks the pull request. The gate is K / (N − E_human): only the human records an equivalent mutant, in `state/equivalent_mutants.json`, bound to the file's hash (`python -m scripts.mutation_gate`). The mutation engine itself is project-specific.
 
-Modified files are mutated (AST-based) and the suite is re-run. Surviving mutants are fixed by improving tests. The baseline must pass before mutating, and equivalent mutants are reported instead of covered with artificial tests. It is mandatory in critical modules (money, security, concurrency, public contracts); which paths and what minimum score are defined per project in `state/config.json`.
+![Mutation testing: baseline, mutants in parallel, re-run, fix survivors, human-only equivalences, block the PR when a mandatory file is below the minimum.](docs/img/05-mutation-testing.svg)
 
-![Mutation testing flow: validate the baseline, generate mutants in parallel, re-run the tests, fix surviving mutants by improving tests, and block the PR when a mandatory file is below the minimum score.](docs/img/05-mutation-testing.svg)
+### 5. Human authority
 
-### 6. Human in the loop
+No commits or pushes to `main`, no merge without an explicit human directive, and the human approves every pull request. Rules in `AGENTS.md` are advice, so they are also enforced by hooks, CI and branch protection.
 
-No commits or pushes to `main`, no merges without an explicit human directive, and the human approves every PR. These rules should also be enforced outside the prompt (GitHub branch protection and hooks), since prompt instructions alone are advice, not guarantees.
+![Control layers: AGENTS.md, hooks, CI checks, branch protection, human approval.](docs/img/06-control-layers.svg)
 
-![Control layers: AGENTS.md is advice, hooks intercept commands, CI checks block failing PRs, branch protection makes the server reject direct pushes to main, and the human approves the PR.](docs/img/06-control-layers.svg)
+### 6. Dashboard
 
-### 7. Roles
+A static HTML page (no scripts) with progress, tasks by status, tasks merged per day, the board with ages and lights, timing (agent time, review latency, lead time) and CI cost (runs, queue time, job minutes). `.github/workflows/dashboard.yml` rebuilds it on every push to `main`, every hour and on demand, and publishes it on GitHub Pages. A Pages site is public: do not publish the dashboard of a private project.
 
-At session start the agent asks for its `ROLE:` and reads that role's `LASTCONTEXT` (or the global one if none exists).
+## The life of a task
 
----
+![Life of a task: ask for a ROLE, read the generated context, step 0, branch, TDD with single local tests, commit, push, CI, delta and ADRs, PR, human approval, delete the branch.](docs/img/02-task-lifecycle.svg)
 
-## The Life of a Task
-
-Each task progresses through an isolated branch workflow with deterministic checks and explicit sign-offs:
-
-![Life of a task in 12 steps: ask for a ROL, read the context, check git status and branch, create a branch, TDD, atomic commit, push and wait for CI, write the delta, ask about the PR, open it with the CI link, human approval, delete the branch.](docs/img/02-task-lifecycle.svg)
-
----
-
-## Directory Structure
+## Directory structure
 
 ```text
-afaw-anti-fragile-agentic-workflow/
-├── .agents/                      # Agent skill definitions and instructions
-│   └── skills/                   # Modular skills (add-mcp-tool, db-migration, tests, etc.)
-├── .claude/                      # Claude Code skill configurations and references
-│   └── skills/                   # Claude-compatible skills and eval references
-├── .github/                      # CI/CD workflows
+.
+├── AGENTS.md                      # The rules: single source for every agent
+├── CLAUDE.md                      # Imports AGENTS.md
+├── PENDING.md                     # The human's roadmap (hook: never deleted or emptied)
+├── .claude/
+│   ├── settings.json              # Hook wiring
+│   ├── hooks/                     # session_start (builds and injects LASTCONTEXT.md),
+│   │                              # safety_guard (deny/ask), lint_check
+│   └── skills/                    # commit, ship, tests, push-dev, trash
+├── .github/
+│   ├── pull_request_template.md
 │   └── workflows/
-│       ├── consolidate-state.yml # Regenerates pending.json and lastcontext.json after merges to main
-│       ├── scripts-ci.yml        # Runs linting, type checks, and tests on CI
-│       └── task-delta-check.yml  # Enforces context deltas for any PR touching code
-├── context/                      # Agent and project context system
-│   ├── global/
-│   │   └── lastcontext.json      # Aggregated global project context (CI generated)
-│   ├── roles/                    # Role-specific contexts
-│   │   ├── backend/              # Backend agent context
-│   │   └── frontend/             # Frontend agent context
-│   └── tasks/                    # Task-level delta contexts produced by agents
-│       └── task_001_context.json
-├── dashboard/                    # Monitoring, metrics, and dashboard assets
-├── docs/                         # Architecture documentation and guides
-│   ├── diagrams/                 # Graphviz .dot diagram sources
-│   ├── img/                      # Rendered diagrams (.svg for this README, .png elsewhere)
-│   └── diagrams.md               # Diagram index and markdown references
-├── scripts/                      # Workflow and CI automation scripts
-│   ├── build_diagrams.mjs        # Renders docs/diagrams/*.dot into docs/img/
-│   ├── check_task_delta.py       # Validates task deltas against the code diff
-│   ├── merge_state.py            # Regenerates pending.json and lastcontext.json
-│   ├── mutation_targets.py       # Identifies targets for mutation testing
-│   ├── project_config.py         # Project configuration loader
-│   ├── setup_protection.sh       # Applies branch protection and required checks via gh CLI
-│   └── state_common.py           # JSON schema validation and state utilities
-├── src/                          # Application source code
-│   ├── back/                     # Backend services, routers, and logic
-│   └── front/                    # Frontend UI and components
-├── state/                        # State machines and task status definitions
-│   ├── schemas/                  # JSON Schemas for validating state and deltas
-│   │   ├── config.schema.json    # Schema for state/config.json
-│   │   ├── context_delta.schema.json # Schema for task context deltas
-│   │   └── task.schema.json      # Schema for individual task definitions
-│   ├── tasks/                    # Atomic task files (source of truth)
-│   │   ├── task_001.json
-│   │   ├── task_002.json
-│   │   └── task_003.json
-│   ├── config.json               # Code boundary prefixes, mutation_critical_paths, mutation_min_score
-│   └── pending.json              # Aggregated task summary (CI generated)
-├── tests/                        # Automated test suites
-│   ├── back/                     # Backend tests
-│   ├── front/                    # Frontend tests
-│   └── tooling/                  # Tests for workflow automation scripts
-├── .env.example                  # Template for local credentials
-├── AGENTS.md                     # Universal agent instructions and engineering rules
-├── CLAUDE.md                     # Claude agent instructions (kept identical to AGENTS.md, or a symlink)
-├── LICENSE                       # Project license
-├── package.json                  # Dependencies for the diagram build
-├── pyproject.toml                # Tooling config (ruff, mypy, pytest)
-└── README.md                     # This file
+│       ├── checks.yml             # Every PR: task files, delta, red-first, docs, views
+│       ├── scripts-ci.yml         # Lint, types, tests (skipped on documents-only PRs)
+│       └── dashboard.yml          # Builds and publishes the dashboard
+├── state/
+│   ├── config.json                # Code folders, mutation settings, dashboard settings
+│   ├── schemas/                   # JSON Schemas: task, delta, config, equivalent mutants
+│   └── tasks/task_NNN.json        # One file per task (never deleted)
+├── context/tasks/                 # One delta per task
+├── docs/
+│   ├── adr/                       # Architecture decision records
+│   ├── gotchas/                   # Operational traps, closed as resolved or promoted
+│   ├── templates/                 # ADR and gotcha templates
+│   ├── diagrams/ and img/         # Graphviz sources and rendered figures
+│   └── paper/                     # The white paper (appendix generated from AGENTS.md)
+├── scripts/
+│   ├── afaw_state/                # Model, facts, lights, durations, views, dashboard
+│   ├── build_state.py             # Derived views from a git ref
+│   ├── collect_facts.py           # Measured facts from git and the GitHub API
+│   ├── check_task_files.py        # Lifecycle, declared values only, unique ids
+│   ├── check_task_delta.py        # files_touched equals the diff (--write fills it)
+│   ├── check_docs.py              # ADRs, gotchas, links
+│   ├── red_check.py               # Added tests must fail on the old code
+│   ├── mutation_targets.py        # Mandatory and optional files to mutate
+│   ├── mutation_gate.py           # Score with human-accepted equivalences only
+│   ├── rules_to_tex.py            # The paper's appendix from AGENTS.md
+│   └── setup_protection.sh        # Branch protection and required checks
+├── examples/mock_dashboard.py     # Preview the dashboard and LASTCONTEXT.md with mock data
+├── src/                           # The project's code
+└── tests/tooling/                 # Tests of the scripts and hooks
 ```
 
----
+`build/` (the derived views) is ignored by git.
 
-## Getting Started
+## Getting started
 
-When you create a new repository from this template, GitHub does **not** copy branch protection rules, required checks, or repository secrets. You must configure them in your new repo.
+GitHub does not copy branch protection, required checks or Pages settings to a repository created from a template.
 
-1. **Use the template**: GitHub → **Use this template**, or clone it and re-initialize git.
-2. **Configure state limits**: edit `state/config.json` to define your project's code folders, `mutation_critical_paths` and `mutation_min_score`.
-3. **Set secrets**: copy `.env.example` to `.env` and set your credentials. Add the required secrets to your GitHub repository settings.
-4. **Enforce branch protection**: run `bash scripts/setup_protection.sh` (requires `gh` CLI logged in) to require the CI checks (`lint`, `typecheck`, `tests`, `task-delta`) and block direct pushes to `main`.
-5. **Verify CI**: open a test pull request to confirm the automated checks run and pass.
-6. **Start working**: open a terminal, invoke your agent, and answer the initial `ROLE:` prompt.
+1. **Use the template**: GitHub → **Use this template**.
+2. **Configure** `state/config.json`: code folders, `mutation_critical_paths`, `mutation_min_score`, and the `dashboard` settings.
+3. **Protect `main`**: `bash scripts/setup_protection.sh` (needs the `gh` CLI) requires `lint`, `typecheck`, `tests` and `state-and-docs`, and blocks direct pushes.
+4. **Dashboard** (public repositories): Settings → Pages → Source: **GitHub Actions**.
+5. **Verify**: open a test pull request and check that the workflows run.
+6. **Start**: open a terminal per agent and answer the `ROLE:` question.
 
----
+## Daily workflow
 
-## Daily Workflow
+1. One terminal per agent; answer its `ROLE:`. The session-start hook injects the generated `LASTCONTEXT.md` and `PENDING.md`.
+2. The agent creates its branch, works with TDD running only its own test, and pushes; CI verifies the rest.
+3. At the end it writes `summary` and `next`, fills `files_touched` with `python -m scripts.check_task_delta --base origin/main --write task_NNN`, records any decision as an ADR, and asks before opening the pull request.
+4. You review and merge. Nothing else to approve: the views are derived.
+5. Ask for status at any time, or open the dashboard. Preview it without a repository: `python examples/mock_dashboard.py`.
 
-1. Open one isolated terminal per agent. Start the agent and answer its first question with a `ROLE:`.
-2. The agent creates its branch, works task by task with TDD, pushes, and reads the CI result.
-3. It writes its delta and task file, and asks before opening a PR.
-4. You review and approve. CI regenerates the shared state through its own PR.
-5. Ask for status at any time: the agent reads only `state/pending.json` from `origin/main` and answers with a table (task, status, difficulty, priority).
+## Scope and limits
 
----
+- The reference rules assume a Python backend (async, `pytest`, `mypy --strict`, Postgres, Terraform). Adapt sections 4–10 and 14–16 of `AGENTS.md` for another stack.
+- AFAW has not been validated in a controlled study and makes no claim about speed, cost or defect rates. The paper proposes an evaluation protocol; the dashboard's timings and CI cost are the raw material.
+- Mutation score measures how sensitive the tests are to changes, not whether the code meets its requirements.
+- The red-first check shows that a new test fails on the old code, not that it fails for the right reason.
+- Checks verify the ADRs that exist; a decision that was never recorded is left to the reviewer.
 
-## Scope and Limits
-
-- The reference rules assume a Python backend (async, `pytest`, `mypy --strict`, Postgres, Terraform). For other stacks, adapt sections 4, 5, 8 and 16 of `AGENTS.md`.
-- AFAW has not been validated in a controlled study and makes no claim about speed, cost or defect-rate improvements. Measure your own (time per task, tokens spent, broken tests, escaped bugs) and add them.
-- Mutation score measures how well the tests detect changes, not whether the code meets business requirements.
-- CI minutes are limited on private repositories.
-
----
-
-## Rebuilding the Diagrams
-
-The diagrams are generated from the `.dot` files in `docs/diagrams/`. To change one, edit its source and run:
+## Rebuilding the diagrams and the paper
 
 ```bash
-npm install
-node scripts/build_diagrams.mjs
+for f in docs/diagrams/*.dot; do n=$(basename "$f" .dot); dot -Tsvg "$f" -o "docs/img/$n.svg"; dot -Tpng -Gdpi=200 "$f" -o "docs/img/$n.png"; done
 ```
 
-This rewrites `docs/img/*.svg` and `docs/img/*.png`.
-
----
+The paper: see [`docs/paper/README.md`](docs/paper/README.md).
 
 ## Citation
 
-**Official DOI:** [10.5281/zenodo.23050310](https://doi.org/10.5281/zenodo.23050310)
+**DOI:** [10.5281/zenodo.23050310](https://doi.org/10.5281/zenodo.23050310)
 
 ## Author
 
-Agustin Diaz-Cano, MS Candidate, Information Systems Engineering (UTN)
+Agustin Diaz-Cano, MS Candidate, Information Systems Engineering (UTN). ORCID [0009-0001-4336-490X](https://orcid.org/0009-0001-4336-490X).
 
 ## License
 

@@ -1,0 +1,12 @@
+{
+  "id": "task_001",
+  "title": "AFAW v1.1: derived state, project knowledge, red-first check and dashboard",
+  "role": "maintainer",
+  "type": "feature",
+  "status": "done",
+  "owner": "agent",
+  "branch": "feat/afaw-v1-1-derived-state",
+  "priority": 1,
+  "difficulty": 5,
+  "blocked_by": []
+}

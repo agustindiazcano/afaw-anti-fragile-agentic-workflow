@@ -8,22 +8,21 @@ digraph overview {
   approve [label="Human approves every PR manually\nNo merge without an explicit directive"];
 
   subgraph cluster_agents {
-    label="Isolated agents, one terminal each\nRead state at session start. Write only their own delta and task file.";
+    label="Isolated agents, one terminal each\nRead the generated LASTCONTEXT.md at session start. Write only their own delta and task file.";
     labeljust=c; fontsize=12; fontcolor="#1c64f2"; style="rounded,dashed"; color="#1c64f2"; margin=16;
     node [fillcolor="#e1effe", color="#1c64f2"];
-    a1 [label="Agent A\nbranch feat/task-a\nTDD, atomic commits"];
-    a2 [label="Agent B\nbranch feat/task-b\nTDD, atomic commits"];
-    a3 [label="Agent N\nbranch feat/task-n\nTDD, atomic commits"];
+    a1 [label="Agent A\nbranch feat/task-a\nTDD; runs only the test it writes"];
+    a2 [label="Agent B\nbranch feat/task-b\nTDD; runs only the test it writes"];
+    a3 [label="Agent N\nbranch feat/task-n\nTDD; runs only the test it writes"];
   }
 
   node [fillcolor="#dcfce7", color="#15803d"];
-  ci      [label="CI in the cloud\ntests, lint, types, mutation\nparallel jobs with path filters"];
-  merge   [label="State regeneration in CI\nscripts/merge_state.py"];
+  ci      [label="CI in the cloud\ntests, lint, types, red-first, mutation,\ntask-file, delta and docs checks"];
+  views   [label="Derived views, never committed\nscripts/build_state.py from origin/main\nLASTCONTEXT.md, dashboard, metrics"];
 
   node [fillcolor="#f5f7fa", color="#52606d"];
   pr      [label="Pull request\nwith the CI run link"];
   main    [label="main\nno direct commits or pushes"];
-  statepr [label="State PR opened by CI\npending.json, lastcontext.json"];
 
   human -> a1;
   human -> a2;
@@ -34,7 +33,6 @@ digraph overview {
   ci -> pr [label=" checks pass"];
   pr -> approve;
   approve -> main [label=" merge"];
-  main -> merge [label=" after merge"];
-  merge -> statepr;
-  statepr -> approve [constraint=false, style=dashed, label=" also approved by the human"];
+  main -> views [label=" read on demand"];
+  views -> human [constraint=false, style=dashed, label=" dashboard"];
 }

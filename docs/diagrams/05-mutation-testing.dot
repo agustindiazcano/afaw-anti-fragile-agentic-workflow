@@ -19,10 +19,13 @@ digraph mutation_testing {
   sur  [shape=diamond, style="filled", margin="0.05,0.05", label="Surviving\nmutants?"];
 
   node [fillcolor="#e1effe", color="#1c64f2"];
-  fix  [label="Write or improve tests\nEquivalent mutants: report them,\nno artificial tests"];
+  fix  [label="Write or improve tests\nA survivor believed equivalent: propose it\nin the PR, never cover it with an artificial test"];
+
+  node [fillcolor="#fef3c7", color="#b45309"];
+  eq   [label="Only the human records accepted equivalences\nstate/equivalent_mutants.json, bound to the file hash"];
 
   node [fillcolor="#dcfce7", color="#15803d"];
-  score [shape=diamond, style="filled", margin="0.05,0.05", label="Mandatory file below\nthe minimum score?"];
+  score [shape=diamond, style="filled", margin="0.05,0.05", label="Mandatory file:\nK / (N - E_human)\nbelow the minimum?"];
   ok    [label="Passes\n(optional files: each project decides)"];
 
   node [fillcolor="#fee2e2", color="#b91c1c"];
@@ -35,6 +38,8 @@ digraph mutation_testing {
   gen -> run -> sur;
   sur -> fix [label=" yes"];
   fix -> run [label=" launch again", constraint=false];
+  fix -> eq [style=dashed, label=" proposal"];
+  eq -> score [style=dashed];
   sur -> score [label=" no"];
   score -> block [label=" yes"];
   score -> ok [label=" no"];

@@ -16,6 +16,8 @@ digraph ci_pipeline {
   be   [label="Back end changed\nback-end tests,\nruff and mypy\non the diff"];
   fe   [label="Front end changed\nfront-end tests and\nlinters on the diff"];
   mut  [label="New or modified files\nmutation testing,\nparallelized\n(see the mutation diagram)"];
+  red  [label="Added tests\nred-first check:\neach must fail\non the old code"];
+  state [label="Every PR\ntask files, delta,\nADRs, gotchas, links"];
 
   node [fillcolor="#f5f7fa", color="#52606d"];
   docs [label="Documents only\nno job runs"];
@@ -27,15 +29,19 @@ digraph ci_pipeline {
   link [label="CI run link pasted in the PR"];
 
   {rank=same; push; heavy;}
-  {rank=same; be; fe; mut; docs;}
+  {rank=same; be; fe; red; mut; state; docs;}
 
   push -> filt;
   filt -> be;
   filt -> fe;
+  filt -> red;
   filt -> mut;
+  filt -> state;
   filt -> docs [style=dashed];
   be -> gate;
   fe -> gate;
+  red -> gate;
   mut -> gate;
+  state -> gate;
   gate -> link;
 }
