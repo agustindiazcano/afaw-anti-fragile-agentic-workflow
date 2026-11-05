@@ -249,7 +249,7 @@ The paper: see [`docs/paper/README.md`](docs/paper/README.md). A pull request th
 
 ## Author
 
-Agustin Diaz-Cano, MS Candidate, Information Systems Engineering (UTN). ORCID [0009-0001-4336-490X](https://orcid.org/0009-0001-4336-490X).
+Agustin Diaz-Cano, MS Candidate, Systems Engineering (UTN). ORCID [0009-0001-4336-490X](https://orcid.org/0009-0001-4336-490X).
 
 ## License
 
