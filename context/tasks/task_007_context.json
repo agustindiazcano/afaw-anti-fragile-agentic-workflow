@@ -1,0 +1,9 @@
+{
+  "task_id": "task_007",
+  "files_touched": [],
+  "summary": "Added the rule against coding to the tests: AGENTS.md 2.10 (never hardcode or edit tests to pass them), 11.8-11.9 (property-based tests, held-out tests, human review of the test diff), 12.1 and 12.7 (plain-language mutation definition; what mutation testing does not catch). README and paper state the limit in the failure table, limitations and the mutation section; ADR 0007 records the decision. PDF rebuilt with Arial and Courier New because Liberation fonts are not installed on this machine.",
+  "next": [
+    "Human: review the PDF layout, since it was built with Arial instead of Liberation Sans",
+    "Decide whether to add Hypothesis to the reference stack"
+  ]
+}

@@ -104,7 +104,8 @@ A model proposes and writes code; its own assessment is never trusted. Every num
 | Wrong-branch work | Step 0 (`git status`, `git branch`), one branch per task, one terminal per agent; a hook denies a push to `main` | Agents sharing one working tree can still overwrite uncommitted files |
 | Shared-state conflicts | Each task writes only its own files; shared views are derived on demand and never committed | Agents do not see unmerged work on other branches |
 | Unmeasured claims | Measured values are rejected in task files; `files_touched` must equal the diff; the red step is verified in CI | A person must still follow the CI link |
-| Vacuous tests | Red-first check; mutation testing on the diff; equivalent mutants accepted only by the human | Mutation score is not correctness |
+| Vacuous tests | Red-first check; mutation testing on the diff (it changes the code on purpose and checks that some test fails); equivalent mutants accepted only by the human | Mutation score is not correctness |
+| Code hardcoded to the tests | Rule: never code to a test's sample values or edit a test to make it pass; property-based tests whose inputs the agent does not control; human review of the test diff | Properties written by the agent can be trivial; a test that expects the wrong result still passes |
 | Heavy local runs | Two tiers: single tests locally, everything else in CI, in parallel | CI queue latency and minutes |
 | Unreviewed integration | Hooks, CI checks, branch protection, human approval | Hooks are best-effort |
 
@@ -230,7 +231,7 @@ GitHub does not copy branch protection, required checks or Pages settings to a r
 
 - The reference rules assume a Python backend (async, `pytest`, `mypy --strict`, Postgres, Terraform). Adapt sections 4–10 and 14–16 of `AGENTS.md` for another stack.
 - AFAW has not been validated in a controlled study and makes no claim about speed, cost or defect rates. The paper proposes an evaluation protocol; the dashboard's timings and CI cost are the raw material.
-- Mutation score measures how sensitive the tests are to changes, not whether the code meets its requirements.
+- Mutation score measures how sensitive the tests are to changes, not whether the code meets its requirements. It does not detect an implementation hardcoded to the test's values (`if x == 3: return 9`), a test that expects the wrong result, or a case nobody thought of. The rule against hardcoding is advice to the agent; what catches it is property-based tests, which generate inputs the agent does not control, and the human review of the test diff. Both depend on the properties and tests being good.
 - The red-first check shows that a new test fails on the old code, not that it fails for the right reason.
 - Checks verify the ADRs that exist; a decision that was never recorded is left to the reviewer.
 - Documentation that stops being true misleads more than none. Derived views are rebuilt and decisions can be superseded, but nothing detects a decision record whose text went stale while nobody replaced it.

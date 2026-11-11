@@ -1,0 +1,12 @@
+{
+  "id": "task_007",
+  "title": "Add the rule against coding to the tests to AGENTS.md, README and the paper",
+  "role": "maintainer",
+  "type": "chore",
+  "status": "done",
+  "owner": "agent",
+  "branch": "docs/anti-hardcoding-tests",
+  "priority": 2,
+  "difficulty": 1,
+  "blocked_by": []
+}
